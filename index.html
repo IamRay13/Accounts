@@ -155,24 +155,39 @@
             align-items: center;
             justify-content: space-between;
             flex-wrap: wrap;
-            gap: 10px;
+            gap: 10px; /* Gap between label and value if they wrap or are distinct items */
         }
 
         .account-item p:last-child {
             margin-bottom: 0;
         }
 
-        .account-item strong {
-            min-width: 120px;
+        .account-item strong { /* Label part */
+            min-width: 120px; /* Adjust as needed for alignment */
             display: inline-block;
+            margin-right: 5px; /* Space between label and value */
         }
 
-        .copy-btn, .delete-btn, .copy-all-btn {
+        .copyable-info {
+            cursor: pointer;
+            padding: 2px 4px;
+            border-radius: 3px;
+            transition: background-color 0.2s ease, color 0.2s ease;
+            flex-grow: 1; /* Allows the info to take up space */
+            text-align: left; /* Default, but good to be explicit */
+        }
+
+        .copyable-info:hover {
+            background-color: rgba(0, 123, 255, 0.1); /* Subtle hover */
+        }
+        
+        /* Removed .copy-btn from this shared rule if it's no longer used for individual field copies */
+        .delete-btn, .copy-all-btn {
             background: none;
             border: none;
             cursor: pointer;
             font-size: 1rem;
-            margin-left: 10px;
+            margin-left: 10px; /* Only for buttons that are indeed to the right */
             padding: 5px 8px;
             border-radius: 5px;
             transition: background-color 0.2s ease, transform 0.1s ease;
@@ -181,17 +196,22 @@
             gap: 5px;
             color: var(--primary-blue);
             border: 1px solid var(--primary-blue);
-            white-space: nowrap; /* Prevent button text from wrapping */
+            white-space: nowrap; 
+        }
+        
+        .copy-all-btn { /* Specific styling if needed, or rely on shared */
+             margin-left: 0; /* Copy all button can be full width or centered if needed */
         }
 
-        .copy-btn:hover, .copy-all-btn:hover {
+
+        .copy-all-btn:hover { /* Specific hover for copy-all if different */
             background-color: rgba(0, 123, 255, 0.1);
             transform: translateY(-1px);
         }
-
-        .copy-btn:active, .copy-all-btn:active {
+         .copy-all-btn:active {
             transform: translateY(0);
         }
+
 
         .delete-btn {
             background-color: var(--error-color);
@@ -203,7 +223,7 @@
             right: 15px;
             border-radius: 8px;
             transition: background-color 0.3s ease;
-            border: none;
+            border: none; /* Ensure delete button border is explicitly none if shared rule had it */
         }
 
         .delete-btn:hover {
@@ -242,14 +262,14 @@
         .search-sort-container {
             display: flex;
             gap: 10px;
-            margin-bottom: 20px; /* Spacing between search bar and form grid */
+            margin-bottom: 20px; 
             align-items: center;
-            flex-wrap: wrap; /* Allow wrapping on small screens */
+            flex-wrap: wrap; 
         }
 
         .search-sort-container input[type="text"] {
             flex-grow: 1;
-            margin-bottom: 0; /* Remove default input margin */
+            margin-bottom: 0; 
         }
 
         .search-sort-container button {
@@ -268,9 +288,9 @@
             color: var(--white-bg);
         }
 
-        h2 { /* Style for "Added Accounts" heading */
-            margin-top: 30px; /* Spacing above the heading */
-            margin-bottom: 20px; /* Spacing below the heading, before the list */
+        h2 { 
+            margin-top: 30px; 
+            margin-bottom: 20px; 
             text-align: center;
             color: var(--black-text);
         }
@@ -281,7 +301,6 @@
             .form-grid {
                 grid-template-columns: 1fr 1fr;
             }
-            /* Adjustments for field groups that span columns */
             #billerSelectGroup,
             #addAccountBtn,
             #clearAllBtn,
@@ -290,14 +309,11 @@
             #ccAmountSettledGroup {
                 grid-column: span 2;
             }
-
-            /* For smaller screens, ensure the CC bank dropdown doesn't look odd */
             #ccBankSelectGroup {
-                grid-column: span 1; /* Reset for CC bank dropdown */
+                grid-column: span 1; 
             }
-
             .search-sort-container {
-                flex-wrap: nowrap; /* Prevent wrapping on larger screens */
+                flex-wrap: nowrap; 
             }
         }
 
@@ -312,15 +328,21 @@
                 padding: 10px 15px;
                 font-size: 1rem;
             }
-            .account-item p {
+            .account-item p { /* Ensure label and value stack nicely */
                 flex-direction: column;
-                align-items: flex-start;
-                gap: 5px;
+                align-items: flex-start; /* Align label and value to the start */
+                gap: 3px; /* Reduce gap when stacked */
             }
-            .copy-btn {
-                margin-left: 0;
-                align-self: flex-end;
+            .account-item strong {
+                min-width: unset; /* Allow label to take natural width */
+                margin-right: 0;
+                margin-bottom: 2px; /* Small space between label and value when stacked */
             }
+            .copyable-info {
+                width: 100%; /* Make tappable area full width of its line */
+                text-align: left;
+            }
+            /* .copy-btn was here, now irrelevant for individual fields */
             .search-sort-container {
                 flex-direction: column;
                 align-items: stretch;
@@ -328,7 +350,7 @@
             .search-sort-container input,
             .search-sort-container button {
                 width: 100%;
-                margin-top: 5px; /* Add some space between stacked elements */
+                margin-top: 5px; 
             }
         }
     </style>
@@ -481,7 +503,6 @@
         const billerSelect = document.getElementById('billerSelect');
         const ccBankSelect = document.getElementById('ccBankSelect');
 
-        // Generic fields
         const genericAccountHolderGroup = document.getElementById('genericAccountHolderGroup');
         const genericAccountHolderInput = document.getElementById('genericAccountHolder');
         const genericAccountNumberGroup = document.getElementById('genericAccountNumberGroup');
@@ -495,7 +516,6 @@
         const genericRemarksGroup = document.getElementById('genericRemarksGroup');
         const genericRemarksInput = document.getElementById('genericRemarks');
 
-        // BDO specific fields
         const bdoAccountGroup = document.getElementById('bdoAccountGroup');
         const bdoAccountHolderGroup = document.getElementById('bdoAccountHolderGroup');
         const bdoAccountHolderInput = document.getElementById('bdoAccountHolder');
@@ -504,7 +524,6 @@
         const bdoAmountSettledGroup = document.getElementById('bdoAmountSettledGroup');
         const bdoAmountSettledInput = document.getElementById('bdoAmountSettled');
 
-        // Credit Card specific fields
         const ccBankSelectGroup = document.getElementById('ccBankSelectGroup');
         const ccCreditCardNumberGroup = document.getElementById('ccCreditCardNumberGroup');
         const ccCreditCardNumberInput = document.getElementById('ccCreditCardNumber');
@@ -516,7 +535,7 @@
         const ccBillingStatementDateInput = document.getElementById('ccBillingStatementDate');
         const ccContactNumberGroup = document.getElementById('ccContactNumberGroup');
         const ccContactNumberInput = document.getElementById('ccContactNumber');
-        const ccEmailAddressGroup = document.getElementById('ccEmailAddressGroup'); // Corrected assignment
+        const ccEmailAddressGroup = document.getElementById('ccEmailAddressGroup'); 
         const ccEmailAddressInput = document.getElementById('ccEmailAddress');
         const ccRemarksGroup = document.getElementById('ccRemarksGroup');
         const ccRemarksInput = document.getElementById('ccRemarks');
@@ -528,22 +547,18 @@
         const searchBar = document.getElementById('searchBar');
         const sortBtn = document.getElementById('sortBtn');
 
-        // Error message elements
         const billerSelectError = document.getElementById('billerSelect-error');
         const ccBankSelectError = document.getElementById('ccBankSelect-error');
         const genericAccountHolderError = document.getElementById('genericAccountHolder-error');
         const genericAccountNumberError = document.getElementById('genericAccountNumber-error');
         const genericAmountSettledError = document.getElementById('genericAmountSettled-error');
-
         const bdoAccountHolderError = document.getElementById('bdoAccountHolder-error');
         const bdoAccountNumberError = document.getElementById('bdoAccountNumber-error');
         const bdoAmountSettledError = document.getElementById('bdoAmountSettled-error');
-
         const ccCreditCardNumberError = document.getElementById('ccCreditCardNumber-error');
         const ccAccountHolderError = document.getElementById('ccAccountHolder-error');
         const ccAmountSettledError = document.getElementById('ccAmountSettled-error');
         const ccBillingStatementDateError = document.getElementById('ccBillingStatementDate-error');
-
 
         let accounts = [];
         let displayedAccounts = [];
@@ -562,6 +577,7 @@
             }, 3000);
         }
 
+        // This function is still used for the "Copy All Info" button
         async function copyToClipboard(text, element) {
             try {
                 await navigator.clipboard.writeText(text);
@@ -670,38 +686,39 @@
                 accountItem.classList.add('account-item');
                 accountItem.setAttribute('data-id', acc.id);
 
-                let detailsHtml = `
-                    <p><strong>Biller:</strong> <span>${acc.biller}</span> <button class="copy-btn" data-field="biller">📋 Copy</button></p>
-                    <button class="delete-btn" data-id="${acc.id}">Delete</button>
-                `;
+                // Helper to create a paragraph with a label and copyable info span
+                function createInfoParagraph(label, value) {
+                    // Sanitize value before putting into HTML to prevent XSS if data source isn't trusted
+                    // For this app, assuming acc properties are safe.
+                    const displayValue = value || 'N/A';
+                    return `<p><strong>${label}:</strong> <span class="copyable-info">${displayValue}</span></p>`;
+                }
+                
+                let detailsHtml = createInfoParagraph('Biller', acc.biller);
+                detailsHtml += `<button class="delete-btn" data-id="${acc.id}">Delete</button>`; // Delete button remains
+
 
                 if (acc.biller === 'BDO') {
-                    detailsHtml += `
-                        <p><strong>Account:</strong> <span>${acc.account}</span> <button class="copy-btn" data-field="account">📋 Copy</button></p>
-                        <p><strong>Account Holder:</strong> <span>${acc.accountHolder}</span> <button class="copy-btn" data-field="accountHolder">📋 Copy</button></p>
-                        <p><strong>Account Number:</strong> <span>${acc.accountNumber}</span> <button class="copy-btn" data-field="accountNumber">📋 Copy</button></p>
-                        <p><strong>Amount:</strong> <span>₱ ${parseFloat(acc.amountToSettle).toFixed(2)}</span> <button class="copy-btn" data-field="amountToSettle">📋 Copy</button></p>
-                    `;
+                    detailsHtml += createInfoParagraph('Account', acc.account);
+                    detailsHtml += createInfoParagraph('Account Holder', acc.accountHolder);
+                    detailsHtml += createInfoParagraph('Account Number', acc.accountNumber);
+                    detailsHtml += createInfoParagraph('Amount', `₱ ${parseFloat(acc.amountToSettle).toFixed(2)}`);
                 } else if (acc.biller === 'CREDIT CARD') {
-                    detailsHtml += `
-                        <p><strong>Bank:</strong> <span>${acc.creditCardBank}</span> <button class="copy-btn" data-field="creditCardBank">📋 Copy</button></p>
-                        <p><strong>Credit Card Number:</strong> <span>${acc.creditCardNumber}</span> <button class="copy-btn" data-field="creditCardNumber">📋 Copy</button></p>
-                        <p><strong>Account Holder:</strong> <span>${acc.accountHolder}</span> <button class="copy-btn" data-field="accountHolder">📋 Copy</button></p>
-                        <p><strong>Amount:</strong> <span>₱ ${parseFloat(acc.amountToSettle).toFixed(2)}</span> <button class="copy-btn" data-field="amountToSettle">📋 Copy</button></p>
-                        <p><strong>Billing Statement Date:</strong> <span>${acc.billingStatementDate || 'N/A'}</span> <button class="copy-btn" data-field="billingStatementDate">📋 Copy</button></p>
-                        <p><strong>Contact Number:</strong> <span>${acc.contactNumber || 'N/A'}</span> <button class="copy-btn" data-field="contactNumber">📋 Copy</button></p>
-                        <p><strong>Email Address:</strong> <span>${acc.emailAddress || 'N/A'}</span> <button class="copy-btn" data-field="emailAddress">📋 Copy</button></p>
-                        <p><strong>Remarks:</strong> <span>${acc.remarks || 'N/A'}</span> <button class="copy-btn" data-field="remarks">📋 Copy</button></p>
-                    `;
-                } else {
-                    detailsHtml += `
-                        <p><strong>Account Holder:</strong> <span>${acc.accountHolder}</span> <button class="copy-btn" data-field="accountHolder">📋 Copy</button></p>
-                        <p><strong>Account/Ref. Number:</strong> <span>${acc.accountNumber}</span> <button class="copy-btn" data-field="accountNumber">📋 Copy</button></p>
-                        <p><strong>Contact Number:</strong> <span>${acc.telephoneNumber || 'N/A'}</span> <button class="copy-btn" data-field="telephoneNumber">📋 Copy</button></p>
-                        <p><strong>Email Address:</strong> <span>${acc.emailAddress || 'N/A'}</span> <button class="copy-btn" data-field="emailAddress">📋 Copy</button></p>
-                        <p><strong>Amount:</strong> <span>₱ ${parseFloat(acc.amountToSettle).toFixed(2)}</span> <button class="copy-btn" data-field="amountToSettle">📋 Copy</button></p>
-                        <p><strong>Remarks:</strong> <span>${acc.remarks || 'N/A'}</span> <button class="copy-btn" data-field="remarks">📋 Copy</button></p>
-                    `;
+                    detailsHtml += createInfoParagraph('Bank', acc.creditCardBank);
+                    detailsHtml += createInfoParagraph('Credit Card Number', acc.creditCardNumber);
+                    detailsHtml += createInfoParagraph('Account Holder', acc.accountHolder);
+                    detailsHtml += createInfoParagraph('Amount', `₱ ${parseFloat(acc.amountToSettle).toFixed(2)}`);
+                    detailsHtml += createInfoParagraph('Billing Statement Date', acc.billingStatementDate);
+                    detailsHtml += createInfoParagraph('Contact Number', acc.contactNumber);
+                    detailsHtml += createInfoParagraph('Email Address', acc.emailAddress);
+                    detailsHtml += createInfoParagraph('Remarks', acc.remarks);
+                } else { // Generic billers
+                    detailsHtml += createInfoParagraph('Account Holder', acc.accountHolder);
+                    detailsHtml += createInfoParagraph('Account/Ref. Number', acc.accountNumber);
+                    detailsHtml += createInfoParagraph('Contact Number', acc.telephoneNumber);
+                    detailsHtml += createInfoParagraph('Email Address', acc.emailAddress);
+                    detailsHtml += createInfoParagraph('Amount', `₱ ${parseFloat(acc.amountToSettle).toFixed(2)}`);
+                    detailsHtml += createInfoParagraph('Remarks', acc.remarks);
                 }
                 detailsHtml += `<button class="copy-all-btn" data-id="${acc.id}">Copy All Info</button>`;
                 accountItem.innerHTML = detailsHtml;
@@ -724,18 +741,15 @@
         function resetFormFields() {
             billerSelect.value = '';
             ccBankSelect.value = '';
-
             genericAccountHolderInput.value = '';
             genericAccountNumberInput.value = '';
             genericTelephoneNumberInput.value = '';
             genericEmailAddressInput.value = '';
             genericAmountSettledInput.value = '';
             genericRemarksInput.value = '';
-
             bdoAccountHolderInput.value = '';
             bdoAccountNumberInput.value = '';
             bdoAmountSettledInput.value = '';
-
             ccCreditCardNumberInput.value = '';
             ccAccountHolderInput.value = '';
             ccAmountSettledInput.value = '';
@@ -743,7 +757,6 @@
             ccContactNumberInput.value = '';
             ccEmailAddressInput.value = '';
             ccRemarksInput.value = '';
-
             clearAllErrors();
             hideAllFieldGroups();
         }
@@ -755,12 +768,10 @@
             genericEmailAddressGroup.style.display = 'none';
             genericAmountSettledGroup.style.display = 'none';
             genericRemarksGroup.style.display = 'none';
-
             bdoAccountGroup.style.display = 'none';
             bdoAccountHolderGroup.style.display = 'none';
             bdoAccountNumberGroup.style.display = 'none';
             bdoAmountSettledGroup.style.display = 'none';
-
             ccBankSelectGroup.style.display = 'none';
             ccCreditCardNumberGroup.style.display = 'none';
             ccAccountHolderGroup.style.display = 'none';
@@ -782,6 +793,8 @@
                             return true;
                         }
                     }
+                    // Also search amount if it's a number
+                    if (acc.amountToSettle && acc.amountToSettle.toString().includes(searchTerm)) return true;
                     return false;
                 });
             }
@@ -801,9 +814,7 @@
             hideAllFieldGroups();
             clearAllErrors();
             ccBankSelect.value = '';
-
             const selectedBiller = billerSelect.value;
-
             if (selectedBiller === 'BDO') {
                 bdoAccountGroup.style.display = 'flex';
                 bdoAccountHolderGroup.style.display = 'flex';
@@ -811,7 +822,6 @@
                 bdoAmountSettledGroup.style.display = 'flex';
             } else if (selectedBiller === 'CREDIT CARD') {
                 ccBankSelectGroup.style.display = 'flex';
-                // Conditional display of other CC fields will be handled by ccBankSelect listener
             } else if (selectedBiller !== '') {
                 genericAccountHolderGroup.style.display = 'flex';
                 genericAccountNumberGroup.style.display = 'flex';
@@ -830,9 +840,7 @@
             ccContactNumberGroup.style.display = 'none';
             ccEmailAddressGroup.style.display = 'none';
             ccRemarksGroup.style.display = 'none';
-
-            clearAllErrors(); // Clear errors when bank selection changes
-
+            clearAllErrors();
             if (ccBankSelect.value !== '') {
                 ccCreditCardNumberGroup.style.display = 'flex';
                 ccAccountHolderGroup.style.display = 'flex';
@@ -849,45 +857,15 @@
                 showToast('Please fill in all required fields correctly.', 'error');
                 return;
             }
-
             const selectedBiller = billerSelect.value;
-            let newAccount = {
-                id: Date.now(),
-                biller: selectedBiller
-            };
-
+            let newAccount = { id: Date.now(), biller: selectedBiller };
             if (selectedBiller === 'BDO') {
-                newAccount = {
-                    ...newAccount,
-                    account: 'BDO',
-                    accountHolder: bdoAccountHolderInput.value.trim(),
-                    accountNumber: bdoAccountNumberInput.value.trim(),
-                    amountToSettle: parseFloat(bdoAmountSettledInput.value).toFixed(2)
-                };
+                newAccount = { ...newAccount, account: 'BDO', accountHolder: bdoAccountHolderInput.value.trim(), accountNumber: bdoAccountNumberInput.value.trim(), amountToSettle: parseFloat(bdoAmountSettledInput.value).toFixed(2) };
             } else if (selectedBiller === 'CREDIT CARD') {
-                newAccount = {
-                    ...newAccount,
-                    creditCardBank: ccBankSelect.value,
-                    creditCardNumber: ccCreditCardNumberInput.value.trim(),
-                    accountHolder: ccAccountHolderInput.value.trim(),
-                    amountToSettle: parseFloat(ccAmountSettledInput.value).toFixed(2),
-                    billingStatementDate: ccBillingStatementDateInput.value.trim(),
-                    contactNumber: ccContactNumberInput.value.trim(),
-                    emailAddress: ccEmailAddressInput.value.trim(),
-                    remarks: ccRemarksInput.value.trim()
-                };
+                newAccount = { ...newAccount, creditCardBank: ccBankSelect.value, creditCardNumber: ccCreditCardNumberInput.value.trim(), accountHolder: ccAccountHolderInput.value.trim(), amountToSettle: parseFloat(ccAmountSettledInput.value).toFixed(2), billingStatementDate: ccBillingStatementDateInput.value.trim(), contactNumber: ccContactNumberInput.value.trim(), emailAddress: ccEmailAddressInput.value.trim(), remarks: ccRemarksInput.value.trim() };
             } else {
-                newAccount = {
-                    ...newAccount,
-                    accountHolder: genericAccountHolderInput.value.trim(),
-                    accountNumber: genericAccountNumberInput.value.trim(),
-                    telephoneNumber: genericTelephoneNumberInput.value.trim(),
-                    emailAddress: genericEmailAddressInput.value.trim(),
-                    amountToSettle: parseFloat(genericAmountSettledInput.value).toFixed(2),
-                    remarks: genericRemarksInput.value.trim()
-                };
+                newAccount = { ...newAccount, accountHolder: genericAccountHolderInput.value.trim(), accountNumber: genericAccountNumberInput.value.trim(), telephoneNumber: genericTelephoneNumberInput.value.trim(), emailAddress: genericEmailAddressInput.value.trim(), amountToSettle: parseFloat(genericAmountSettledInput.value).toFixed(2), remarks: genericRemarksInput.value.trim() };
             }
-
             accounts.push(newAccount);
             saveAccounts();
             applyFiltersAndSort();
@@ -907,7 +885,6 @@
         });
 
         searchBar.addEventListener('input', applyFiltersAndSort);
-
         sortBtn.addEventListener('click', () => {
             accounts.sort((a, b) => {
                 const nameA = (a.biller === 'CREDIT CARD' ? a.creditCardBank || '' : a.biller).toLowerCase();
@@ -921,26 +898,49 @@
         });
 
         accountsList.addEventListener('click', async (event) => {
-            if (event.target.classList.contains('copy-btn')) {
-                const button = event.target;
-                const field = button.dataset.field;
-                const accountItem = button.closest('.account-item');
-                const accountId = parseInt(accountItem.dataset.id);
-                const accountData = accounts.find(acc => acc.id === accountId);
+            const target = event.target;
 
-                if (accountData) {
-                    let textToCopy = accountData[field];
-                    if (field === 'amountToSettle') {
-                        textToCopy = `₱ ${parseFloat(textToCopy).toFixed(2)}`;
-                    } else if (!textToCopy && (field === 'billingStatementDate' || field === 'contactNumber' || field === 'emailAddress' || field === 'remarks' || field === 'telephoneNumber')) {
-                        textToCopy = 'N/A'; // Ensure N/A is copied if field is empty/undefined
-                    }
-                    copyToClipboard(textToCopy, button);
+            // Handle Tapping Information to Copy
+            if (target.classList.contains('copyable-info')) {
+                const spanElement = target;
+                const textToCopy = spanElement.textContent;
+
+                try {
+                    await navigator.clipboard.writeText(textToCopy);
+                    const originalText = spanElement.textContent;
+                    const originalStyles = {
+                        backgroundColor: spanElement.style.backgroundColor,
+                        color: spanElement.style.color,
+                        padding: spanElement.style.padding,
+                        borderRadius: spanElement.style.borderRadius,
+                        fontWeight: spanElement.style.fontWeight
+                    };
+
+                    spanElement.textContent = 'Copied!';
+                    spanElement.style.backgroundColor = 'var(--success-color)';
+                    spanElement.style.color = 'var(--toast-text)'; // White text on green bg
+                    spanElement.style.padding = '2px 5px'; 
+                    spanElement.style.borderRadius = '3px';
+                    spanElement.style.fontWeight = 'bold';
+
+                    setTimeout(() => {
+                        spanElement.textContent = originalText;
+                        spanElement.style.backgroundColor = originalStyles.backgroundColor;
+                        spanElement.style.color = originalStyles.color;
+                        spanElement.style.padding = originalStyles.padding;
+                        spanElement.style.borderRadius = originalStyles.borderRadius;
+                        spanElement.style.fontWeight = originalStyles.fontWeight;
+                    }, 1500);
+                } catch (err) {
+                    showToast('Failed to copy text: ' + err, 'error');
+                    console.error('Failed to copy text: ', err);
                 }
+                return; // Stop further processing for this click
             }
 
-            if (event.target.classList.contains('copy-all-btn')) {
-                const button = event.target;
+            // Handle Copy All Button
+            if (target.classList.contains('copy-all-btn')) {
+                const button = target;
                 const accountItem = button.closest('.account-item');
                 const accountId = parseInt(accountItem.dataset.id);
                 const accountData = accounts.find(acc => acc.id === accountId);
@@ -972,33 +972,31 @@
                                   `Amount: ₱ ${parseFloat(accountData.amountToSettle).toFixed(2)}\n` +
                                   `Remarks: ${accountData.remarks || 'N/A'}`;
                     }
-                    copyToClipboard(allInfo, button);
+                    copyToClipboard(allInfo, button); // Uses the existing function for button feedback
                 }
+                return;
             }
 
-            if (event.target.classList.contains('delete-btn')) {
-                const button = event.target;
+            // Handle Delete Buttons
+            if (target.classList.contains('delete-btn')) {
+                const button = target;
                 const accountIdToDelete = parseInt(button.dataset.id);
-
                 if (confirm('Are you sure you want to delete this account?')) {
                     accounts = accounts.filter(acc => acc.id !== accountIdToDelete);
                     saveAccounts();
                     applyFiltersAndSort();
                     showToast('Account deleted successfully!');
                 }
+                return;
             }
         });
 
         document.addEventListener('DOMContentLoaded', () => {
             loadAccounts();
-            hideAllFieldGroups(); // Ensure form starts clean
-            // Make sure billerSelect doesn't trigger field display before user interaction if a value is persisted by browser
-             if (billerSelect.value === "") {
+            if (billerSelect.value === "") {
                 hideAllFieldGroups();
             } else {
-                // Trigger change to show relevant fields if a biller is pre-selected (e.g. by browser autofill)
-                // but only if it's not the placeholder
-                 billerSelect.dispatchEvent(new Event('change'));
+                billerSelect.dispatchEvent(new Event('change'));
             }
         });
     </script>
