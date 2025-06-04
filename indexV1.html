@@ -381,7 +381,8 @@
             margin-top: 10px;
         }
 
-        #passwordError, #dobQuestionError {
+        /* Renamed for clarity in JS */
+        #modalPasswordError, #modalDobQuestionError { 
             color: var(--error-color);
             margin-top: -10px;
             margin-bottom: 10px;
@@ -514,9 +515,9 @@
         <div class="modal-content">
             <h3>Enter Master Password</h3>
             <input type="password" id="masterPasswordInput" placeholder="Master Password">
-            <div id="passwordError" class="validation-error"></div>
+            <div id="modalPasswordError" class="validation-error"></div> 
             <input type="text" id="dobQuestionInput" placeholder="What is your DOB (MM/DD/YYYY)?" style="display: none;">
-            <div id="dobQuestionError" class="validation-error"></div>
+            <div id="modalDobQuestionError" class="validation-error"></div> 
             <button id="accessAppBtn" class="btn-primary">Access Application</button>
         </div>
     </div>
@@ -728,8 +729,9 @@
         const masterPasswordInput = document.getElementById('masterPasswordInput');
         const dobQuestionInput = document.getElementById('dobQuestionInput');
         const accessAppBtn = document.getElementById('accessAppBtn');
-        const passwordError = document.getElementById('passwordError');
-        const dobQuestionError = document.getElementById('dobQuestionError');
+        // Corrected variable names for modal-specific errors
+        const modalPasswordError = document.getElementById('modalPasswordError'); 
+        const modalDobQuestionError = document.getElementById('modalDobQuestionError');
         const appContent = document.getElementById('appContent');
 
         const billerSelect = document.getElementById('billerSelect');
@@ -751,7 +753,6 @@
         const genericAccountNumberGroup = document.getElementById('genericAccountNumberGroup');
         const genericAccountNumberInput = document.getElementById('genericAccountNumber');
         const genericTelephoneNumberGroup = document.getElementById('genericTelephoneNumberGroup');
-        const genericTelephoneNumberInput = document.getElementById('genericTelephoneNumber');
         const genericEmailAddressGroup = document.getElementById('genericEmailAddressGroup');
         const genericEmailAddressInput = document.getElementById('genericEmailAddress');
         const genericAmountSettledGroup = document.getElementById('genericAmountSettledGroup');
@@ -806,7 +807,8 @@
         const accountNameSelectError = document.getElementById('accountNameSelect-error');
         const otherAccountNameError = document.getElementById('otherAccountName-error');
         const usernameError = document.getElementById('username-error');
-        const passwordError = document.getElementById('password-error');
+        // This is the form's password error, distinct from the modal's
+        const passwordError = document.getElementById('password-error'); 
 
         const toggleDataBtn = document.getElementById('toggleDataBtn');
         const savedDataSection = document.getElementById('savedDataSection');
@@ -1350,42 +1352,52 @@
 
         // Refined Password Protection Logic
         accessAppBtn.addEventListener('click', () => {
+            console.log("Access button clicked."); // Debug: Confirm click event
             const enteredPassword = masterPasswordInput.value.trim();
             const enteredDob = dobQuestionInput.value.trim();
+            console.log("Entered password:", enteredPassword); // Debug: Check password value
+            console.log("Entered DOB:", enteredDob); // Debug: Check DOB value
 
-            passwordError.textContent = '';
-            dobQuestionError.textContent = '';
+            modalPasswordError.textContent = ''; // Use modal-specific error variable
+            modalDobQuestionError.textContent = ''; // Use modal-specific error variable
 
             if (dobQuestionInput.style.display === 'block') { // User is trying to answer DOB question
+                console.log("Attempting DOB verification."); // Debug: Indicate DOB path
                 if (enteredDob === DOB_Youtube) {
+                    console.log("DOB correct. Granting access."); // Debug: DOB success
                     passwordProtectionModal.style.display = 'none';
                     appContent.classList.remove('hidden-content');
                     loadAccounts();
                     showToast('Access granted!', 'success');
                     passwordAttempts = 0; // Reset attempts on successful access
                 } else {
-                    dobQuestionError.textContent = 'Incorrect Date of Birth. Please try again.';
+                    console.log("DOB incorrect."); // Debug: DOB failure
+                    modalDobQuestionError.textContent = 'Incorrect Date of Birth. Please try again.';
                     dobQuestionInput.value = ''; // Clear DOB input on incorrect attempt
                 }
             } else { // User is trying to enter master password
+                console.log("Attempting Master Password verification."); // Debug: Indicate password path
                 if (enteredPassword === MASTER_PASSWORD) {
+                    console.log("Master Password correct. Granting access."); // Debug: Password success
                     passwordProtectionModal.style.display = 'none';
                     appContent.classList.remove('hidden-content');
                     loadAccounts();
                     showToast('Access granted!', 'success');
                     passwordAttempts = 0; // Reset attempts on successful access
                 } else {
+                    console.log("Master Password incorrect. Attempts:", passwordAttempts + 1); // Debug: Password failure
                     passwordAttempts++;
                     masterPasswordInput.value = ''; // Clear password field on incorrect attempt
                     if (passwordAttempts < 3) {
-                        passwordError.textContent = `Incorrect password. ${3 - passwordAttempts} attempts remaining.`;
+                        modalPasswordError.textContent = `Incorrect password. ${3 - passwordAttempts} attempts remaining.`;
                     } else {
+                        console.log("3 incorrect password attempts. Switching to DOB question."); // Debug: Switch to DOB
                         masterPasswordInput.style.display = 'none';
-                        passwordError.style.display = 'none';
+                        modalPasswordError.style.display = 'none'; // Hide password error for DOB question
                         dobQuestionInput.style.display = 'block';
                         dobQuestionInput.focus(); // Focus on the DOB input
                         accessAppBtn.textContent = 'Verify DOB';
-                        passwordError.textContent = ''; // Clear any previous password error message
+                        modalPasswordError.textContent = ''; // Clear any previous password error message
                     }
                 }
             }
@@ -1464,7 +1476,7 @@
             passwordProtectionModal.style.display = 'flex';
             appContent.classList.add('hidden-content'); 
             masterPasswordInput.focus(); 
-            // The loadAccounts() call will be within accessAppBtn click handler
+            // The loadAccounts() call will be within accessAppBtn click handler once access is granted
         });
     </script>
 </body>
