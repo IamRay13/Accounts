@@ -72,6 +72,7 @@
         input[type="number"],
         input[type="date"],
         input[type="email"],
+        input[type="password"], /* Added for password field */
         select {
             padding: 12px 15px;
             border: 1px solid var(--border-color);
@@ -88,6 +89,7 @@
         input[type="number"]:focus,
         input[type="date"]:focus,
         input[type="email"]:focus,
+        input[type="password"]:focus, /* Added for password field */
         select:focus {
             border-color: var(--primary-blue);
             box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
@@ -306,10 +308,15 @@
             #clearAllBtn,
             #genericAmountSettledGroup,
             #bdoAmountSettledGroup,
-            #ccAmountSettledGroup {
+            #ccAmountSettledGroup,
+            #accountNameGroup, /* New */
+            #usernameGroup, /* New */
+            #passwordGroup /* New */
+            {
                 grid-column: span 2;
             }
-            #ccBankSelectGroup {
+            #ccBankSelectGroup,
+            #otherAccountNameGroup /* New */ {
                 grid-column: span 1; 
             }
             .search-sort-container {
@@ -369,7 +376,7 @@
                 <label for="billerSelect">Select Biller:</label>
                 <select id="billerSelect">
                     <option value="">-- Please Select --</option>
-                    <option value="PLDT">PLDT</option>
+                    <option value="Accounts">Accounts</option> <option value="PLDT">PLDT</option>
                     <option value="SHOPEE">SHOPEE</option>
                     <option value="GCASH">GCASH</option>
                     <option value="SEABANK PH">SEABANK PH</option>
@@ -382,6 +389,41 @@
                 <div class="validation-error" id="billerSelect-error"></div>
             </div>
 
+            <div class="form-group" id="accountNameGroup" style="display: none;">
+                <label for="accountNameSelect">Account Name:</label>
+                <select id="accountNameSelect">
+                    <option value="">-- Select Account Type --</option>
+                    <option value="PAGIBIG PH">PAGIBIG PH</option>
+                    <option value="SSS">SSS</option>
+                    <option value="Philhealth">Philhealth</option>
+                    <option value="Google">Google</option>
+                    <option value="Yahoo">Yahoo</option>
+                    <option value="Instagram">Instagram</option>
+                    <option value="Facebook">Facebook</option>
+                    <option value="YouTube">YouTube</option>
+                    <option value="Other Social Media">Other Social Media</option>
+                    <option value="Other">Other</option>
+                </select>
+                <div class="validation-error" id="accountNameSelect-error"></div>
+            </div>
+
+            <div class="form-group" id="otherAccountNameGroup" style="display: none;">
+                <label for="otherAccountName">Other Account Name:</label>
+                <input type="text" id="otherAccountName" placeholder="e.g., Netflix">
+                <div class="validation-error" id="otherAccountName-error"></div>
+            </div>
+
+            <div class="form-group" id="usernameGroup" style="display: none;">
+                <label for="usernameInput">Username:</label>
+                <input type="text" id="usernameInput" placeholder="Enter username">
+                <div class="validation-error" id="username-error"></div>
+            </div>
+
+            <div class="form-group" id="passwordGroup" style="display: none;">
+                <label for="passwordInput">Password:</label>
+                <input type="password" id="passwordInput" placeholder="Enter password">
+                <div class="validation-error" id="password-error"></div>
+            </div>
             <div class="form-group" id="ccBankSelectGroup" style="display: none;">
                 <label for="ccBankSelect">Select Credit Card Bank:</label>
                 <select id="ccBankSelect">
@@ -503,6 +545,16 @@
         const billerSelect = document.getElementById('billerSelect');
         const ccBankSelect = document.getElementById('ccBankSelect');
 
+        // New Account fields
+        const accountNameGroup = document.getElementById('accountNameGroup');
+        const accountNameSelect = document.getElementById('accountNameSelect');
+        const otherAccountNameGroup = document.getElementById('otherAccountNameGroup');
+        const otherAccountNameInput = document.getElementById('otherAccountName');
+        const usernameGroup = document.getElementById('usernameGroup');
+        const usernameInput = document.getElementById('usernameInput');
+        const passwordGroup = document.getElementById('passwordGroup');
+        const passwordInput = document.getElementById('passwordInput');
+
         const genericAccountHolderGroup = document.getElementById('genericAccountHolderGroup');
         const genericAccountHolderInput = document.getElementById('genericAccountHolder');
         const genericAccountNumberGroup = document.getElementById('genericAccountNumberGroup');
@@ -559,6 +611,12 @@
         const ccAccountHolderError = document.getElementById('ccAccountHolder-error');
         const ccAmountSettledError = document.getElementById('ccAmountSettled-error');
         const ccBillingStatementDateError = document.getElementById('ccBillingStatementDate-error');
+        // New Account Error elements
+        const accountNameSelectError = document.getElementById('accountNameSelect-error');
+        const otherAccountNameError = document.getElementById('otherAccountName-error');
+        const usernameError = document.getElementById('username-error');
+        const passwordError = document.getElementById('password-error');
+
 
         let accounts = [];
         let displayedAccounts = [];
@@ -612,20 +670,20 @@
                 isValid = false;
             }
 
-            if (selectedBiller && selectedBiller !== 'BDO' && selectedBiller !== 'CREDIT CARD') {
-                if (genericAccountHolderInput.value.trim() === '') {
-                    genericAccountHolderError.textContent = 'Account holder name is required.';
+            if (selectedBiller === 'Accounts') {
+                if (accountNameSelect.value === '') {
+                    accountNameSelectError.textContent = 'Please select an account type.';
+                    isValid = false;
+                } else if (accountNameSelect.value === 'Other' && otherAccountNameInput.value.trim() === '') {
+                    otherAccountNameError.textContent = 'Please enter the other account name.';
                     isValid = false;
                 }
-                if (genericAccountNumberInput.value.trim() === '') {
-                    genericAccountNumberError.textContent = 'Account/Reference number is required.';
+                if (usernameInput.value.trim() === '') {
+                    usernameError.textContent = 'Username is required.';
                     isValid = false;
                 }
-                if (genericAmountSettledInput.value.trim() === '' || isNaN(parseFloat(genericAmountSettledInput.value))) {
-                    genericAmountSettledError.textContent = 'Valid amount is required.';
-                    isValid = false;
-                } else if (parseFloat(genericAmountSettledInput.value) <= 0) {
-                    genericAmountSettledError.textContent = 'Amount must be greater than zero.';
+                if (passwordInput.value.trim() === '') {
+                    passwordError.textContent = 'Password is required.';
                     isValid = false;
                 }
             } else if (selectedBiller === 'BDO') {
@@ -668,6 +726,22 @@
                     ccBillingStatementDateError.textContent = 'Billing statement date is required.';
                     isValid = false;
                 }
+            } else if (selectedBiller !== '') { // Generic billers
+                if (genericAccountHolderInput.value.trim() === '') {
+                    genericAccountHolderError.textContent = 'Account holder name is required.';
+                    isValid = false;
+                }
+                if (genericAccountNumberInput.value.trim() === '') {
+                    genericAccountNumberError.textContent = 'Account/Reference number is required.';
+                    isValid = false;
+                }
+                if (genericAmountSettledInput.value.trim() === '' || isNaN(parseFloat(genericAmountSettledInput.value))) {
+                    genericAmountSettledError.textContent = 'Valid amount is required.';
+                    isValid = false;
+                } else if (parseFloat(genericAmountSettledInput.value) <= 0) {
+                    genericAmountSettledError.textContent = 'Amount must be greater than zero.';
+                    isValid = false;
+                }
             }
             return isValid;
         }
@@ -687,10 +761,11 @@
                 accountItem.setAttribute('data-id', acc.id);
 
                 // Helper to create a paragraph with a label and copyable info span
-                function createInfoParagraph(label, value) {
-                    // Sanitize value before putting into HTML to prevent XSS if data source isn't trusted
-                    // For this app, assuming acc properties are safe.
+                function createInfoParagraph(label, value, isPassword = false) {
                     const displayValue = value || 'N/A';
+                    if (isPassword) {
+                        return `<p><strong>${label}:</strong> <span class="copyable-info" data-password="${value}">**********</span></p>`;
+                    }
                     return `<p><strong>${label}:</strong> <span class="copyable-info">${displayValue}</span></p>`;
                 }
                 
@@ -698,7 +773,11 @@
                 detailsHtml += `<button class="delete-btn" data-id="${acc.id}">Delete</button>`; // Delete button remains
 
 
-                if (acc.biller === 'BDO') {
+                if (acc.biller === 'Accounts') {
+                    detailsHtml += createInfoParagraph('Account Name', acc.accountName);
+                    detailsHtml += createInfoParagraph('Username', acc.username);
+                    detailsHtml += createInfoParagraph('Password', acc.password, true); // Mark as password
+                } else if (acc.biller === 'BDO') {
                     detailsHtml += createInfoParagraph('Account', acc.account);
                     detailsHtml += createInfoParagraph('Account Holder', acc.accountHolder);
                     detailsHtml += createInfoParagraph('Account Number', acc.accountNumber);
@@ -741,6 +820,10 @@
         function resetFormFields() {
             billerSelect.value = '';
             ccBankSelect.value = '';
+            accountNameSelect.value = ''; // New
+            otherAccountNameInput.value = ''; // New
+            usernameInput.value = ''; // New
+            passwordInput.value = ''; // New
             genericAccountHolderInput.value = '';
             genericAccountNumberInput.value = '';
             genericTelephoneNumberInput.value = '';
@@ -762,6 +845,12 @@
         }
 
         function hideAllFieldGroups() {
+            // New Account fields
+            accountNameGroup.style.display = 'none';
+            otherAccountNameGroup.style.display = 'none';
+            usernameGroup.style.display = 'none';
+            passwordGroup.style.display = 'none';
+
             genericAccountHolderGroup.style.display = 'none';
             genericAccountNumberGroup.style.display = 'none';
             genericTelephoneNumberGroup.style.display = 'none';
@@ -789,6 +878,7 @@
             if (searchTerm) {
                 filtered = filtered.filter(acc => {
                     for (const key in acc) {
+                        // Check if the property value is a string and includes the search term
                         if (typeof acc[key] === 'string' && acc[key].toLowerCase().includes(searchTerm)) {
                             return true;
                         }
@@ -800,8 +890,10 @@
             }
 
             filtered.sort((a, b) => {
-                const nameA = (a.biller === 'CREDIT CARD' ? a.creditCardBank || '' : a.biller).toLowerCase();
-                const nameB = (b.biller === 'CREDIT CARD' ? b.creditCardBank || '' : b.biller).toLowerCase();
+                const nameA = (a.biller === 'CREDIT CARD' ? a.creditCardBank || '' : 
+                               (a.biller === 'Accounts' ? a.accountName || '' : a.biller)).toLowerCase();
+                const nameB = (b.biller === 'CREDIT CARD' ? b.creditCardBank || '' : 
+                               (b.biller === 'Accounts' ? b.accountName || '' : b.biller)).toLowerCase();
                 if (nameA < nameB) return -1;
                 if (nameA > nameB) return 1;
                 return 0;
@@ -813,22 +905,38 @@
         billerSelect.addEventListener('change', () => {
             hideAllFieldGroups();
             clearAllErrors();
-            ccBankSelect.value = '';
+            ccBankSelect.value = ''; // Reset for credit card bank
+            accountNameSelect.value = ''; // Reset for account name
+            otherAccountNameInput.value = ''; // Reset other account name
+            
             const selectedBiller = billerSelect.value;
-            if (selectedBiller === 'BDO') {
+            if (selectedBiller === 'Accounts') {
+                accountNameGroup.style.display = 'flex';
+                usernameGroup.style.display = 'flex';
+                passwordGroup.style.display = 'flex';
+            } else if (selectedBiller === 'BDO') {
                 bdoAccountGroup.style.display = 'flex';
                 bdoAccountHolderGroup.style.display = 'flex';
                 bdoAccountNumberGroup.style.display = 'flex';
                 bdoAmountSettledGroup.style.display = 'flex';
             } else if (selectedBiller === 'CREDIT CARD') {
                 ccBankSelectGroup.style.display = 'flex';
-            } else if (selectedBiller !== '') {
+            } else if (selectedBiller !== '') { // Generic billers
                 genericAccountHolderGroup.style.display = 'flex';
                 genericAccountNumberGroup.style.display = 'flex';
                 genericTelephoneNumberGroup.style.display = 'flex';
                 genericEmailAddressGroup.style.display = 'flex';
                 genericAmountSettledGroup.style.display = 'flex';
                 genericRemarksGroup.style.display = 'flex';
+            }
+        });
+
+        accountNameSelect.addEventListener('change', () => {
+            if (accountNameSelect.value === 'Other') {
+                otherAccountNameGroup.style.display = 'flex';
+            } else {
+                otherAccountNameGroup.style.display = 'none';
+                otherAccountNameInput.value = '';
             }
         });
 
@@ -859,7 +967,16 @@
             }
             const selectedBiller = billerSelect.value;
             let newAccount = { id: Date.now(), biller: selectedBiller };
-            if (selectedBiller === 'BDO') {
+
+            if (selectedBiller === 'Accounts') {
+                const selectedAccountName = accountNameSelect.value;
+                newAccount = { 
+                    ...newAccount, 
+                    accountName: selectedAccountName === 'Other' ? otherAccountNameInput.value.trim() : selectedAccountName,
+                    username: usernameInput.value.trim(),
+                    password: passwordInput.value.trim() // Storing password directly. Consider encryption for sensitive data.
+                };
+            } else if (selectedBiller === 'BDO') {
                 newAccount = { ...newAccount, account: 'BDO', accountHolder: bdoAccountHolderInput.value.trim(), accountNumber: bdoAccountNumberInput.value.trim(), amountToSettle: parseFloat(bdoAmountSettledInput.value).toFixed(2) };
             } else if (selectedBiller === 'CREDIT CARD') {
                 newAccount = { ...newAccount, creditCardBank: ccBankSelect.value, creditCardNumber: ccCreditCardNumberInput.value.trim(), accountHolder: ccAccountHolderInput.value.trim(), amountToSettle: parseFloat(ccAmountSettledInput.value).toFixed(2), billingStatementDate: ccBillingStatementDateInput.value.trim(), contactNumber: ccContactNumberInput.value.trim(), emailAddress: ccEmailAddressInput.value.trim(), remarks: ccRemarksInput.value.trim() };
@@ -887,8 +1004,10 @@
         searchBar.addEventListener('input', applyFiltersAndSort);
         sortBtn.addEventListener('click', () => {
             accounts.sort((a, b) => {
-                const nameA = (a.biller === 'CREDIT CARD' ? a.creditCardBank || '' : a.biller).toLowerCase();
-                const nameB = (b.biller === 'CREDIT CARD' ? b.creditCardBank || '' : b.biller).toLowerCase();
+                const nameA = (a.biller === 'CREDIT CARD' ? a.creditCardBank || '' : 
+                               (a.biller === 'Accounts' ? a.accountName || '' : a.biller)).toLowerCase();
+                const nameB = (b.biller === 'CREDIT CARD' ? b.creditCardBank || '' : 
+                               (b.biller === 'Accounts' ? b.accountName || '' : b.biller)).toLowerCase();
                 if (nameA < nameB) return -1;
                 if (nameA > nameB) return 1;
                 return 0;
@@ -903,7 +1022,12 @@
             // Handle Tapping Information to Copy
             if (target.classList.contains('copyable-info')) {
                 const spanElement = target;
-                const textToCopy = spanElement.textContent;
+                let textToCopy = spanElement.textContent;
+
+                // Special handling for password field: copy the actual password
+                if (spanElement.dataset.password) {
+                    textToCopy = spanElement.dataset.password;
+                }
 
                 try {
                     await navigator.clipboard.writeText(textToCopy);
@@ -947,7 +1071,12 @@
 
                 if (accountData) {
                     let allInfo = '';
-                    if (accountData.biller === 'BDO') {
+                    if (accountData.biller === 'Accounts') {
+                        allInfo = `Biller: ${accountData.biller}\n` +
+                                  `Account Name: ${accountData.accountName}\n` +
+                                  `Username: ${accountData.username}\n` +
+                                  `Password: ${accountData.password}`; // Include actual password for copy all
+                    } else if (accountData.biller === 'BDO') {
                         allInfo = `Biller: ${accountData.biller}\n` +
                                   `Account: ${accountData.account}\n` +
                                   `Account Holder: ${accountData.accountHolder}\n` +
