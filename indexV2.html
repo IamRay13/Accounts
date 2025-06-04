@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Account Settlement Tracker</title>
+    <title>Personal Account Saver</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📄</text></svg>" />
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <style>
@@ -17,6 +17,9 @@
             --error-color: #dc3545;
             --toast-bg: rgba(0, 0, 0, 0.7);
             --toast-text: #FFFFFF;
+            --overlay-bg: rgba(0, 0, 0, 0.6);
+            --modal-bg: #FFFFFF;
+            --modal-border: #ccc;
         }
 
         body {
@@ -54,7 +57,7 @@
             display: grid;
             grid-template-columns: 1fr;
             gap: 20px;
-            margin-bottom: 30px;
+            margin-bottom: 30px; /* Spacing between form and "Added Accounts" heading */
         }
 
         .form-group {
@@ -72,6 +75,7 @@
         input[type="number"],
         input[type="date"],
         input[type="email"],
+        input[type="password"], /* Added for password field */
         select {
             padding: 12px 15px;
             border: 1px solid var(--border-color);
@@ -88,6 +92,7 @@
         input[type="number"]:focus,
         input[type="date"]:focus,
         input[type="email"]:focus,
+        input[type="password"]:focus, /* Added for password field */
         select:focus {
             border-color: var(--primary-blue);
             box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
@@ -155,19 +160,33 @@
             align-items: center;
             justify-content: space-between;
             flex-wrap: wrap;
-            gap: 10px;
+            gap: 10px; /* Gap between label and value if they wrap or are distinct items */
         }
 
         .account-item p:last-child {
             margin-bottom: 0;
         }
 
-        .account-item strong {
-            min-width: 120px;
+        .account-item strong { /* Label part */
+            min-width: 120px; /* Adjust as needed for alignment */
             display: inline-block;
+            margin-right: 5px; /* Space between label and value */
         }
 
-        .copy-btn, .delete-btn {
+        .copyable-info {
+            cursor: pointer;
+            padding: 2px 4px;
+            border-radius: 3px;
+            transition: background-color 0.2s ease, color 0.2s ease;
+            flex-grow: 1; /* Allows the info to take up space */
+            text-align: left; /* Default, but good to be explicit */
+        }
+
+        .copyable-info:hover {
+            background-color: rgba(0, 123, 255, 0.1); /* Subtle hover */
+        }
+        
+        .delete-btn, .copy-all-btn {
             background: none;
             border: none;
             cursor: pointer;
@@ -181,16 +200,22 @@
             gap: 5px;
             color: var(--primary-blue);
             border: 1px solid var(--primary-blue);
+            white-space: nowrap; 
+        }
+        
+        .copy-all-btn {
+             margin-left: 0;
         }
 
-        .copy-btn:hover {
+
+        .copy-all-btn:hover {
             background-color: rgba(0, 123, 255, 0.1);
             transform: translateY(-1px);
         }
-
-        .copy-btn:active {
+         .copy-all-btn:active {
             transform: translateY(0);
         }
+
 
         .delete-btn {
             background-color: var(--error-color);
@@ -218,7 +243,7 @@
             border-radius: 8px;
             padding: 16px;
             position: fixed;
-            z-index: 1;
+            z-index: 1000;
             left: 50%;
             bottom: 30px;
             transform: translateX(-50%);
@@ -238,24 +263,210 @@
             margin-top: 5px;
         }
 
-        /* Responsive adjustments */
+        .search-sort-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px; 
+            align-items: center;
+            flex-wrap: wrap; 
+        }
+
+        .search-sort-container input[type="text"] {
+            flex-grow: 1;
+            margin-bottom: 0; 
+        }
+
+        .search-sort-container button {
+            padding: 10px 15px;
+            border-radius: 8px;
+            border: 1px solid var(--primary-blue);
+            background-color: var(--white-bg);
+            color: var(--primary-blue);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .search-sort-container button:hover {
+            background-color: var(--primary-blue);
+            color: var(--white-bg);
+        }
+
+        h2 { 
+            margin-top: 30px; 
+            margin-bottom: 20px; 
+            text-align: center;
+            color: var(--black-text);
+        }
+
+        .toggle-data-btn {
+            background-color: var(--primary-blue);
+            color: var(--white-bg);
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            width: auto;
+            margin: 20px auto;
+            display: block;
+            font-weight: 600;
+        }
+
+        .toggle-data-btn:hover {
+            background-color: var(--primary-blue-dark);
+            transform: translateY(-2px);
+        }
+        
+        .toggle-data-btn:active {
+            transform: translateY(0);
+        }
+
+        #savedDataSection {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.7s ease-in-out;
+            border-top: 1px solid transparent;
+        }
+
+        #savedDataSection.expanded {
+            max-height: 2000px;
+            border-top: 1px solid var(--border-color);
+            padding-top: 20px;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--overlay-bg);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+
+        .modal-content {
+            background-color: var(--modal-bg);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            width: 90%;
+            max-width: 400px;
+            border: 1px solid var(--modal-border);
+        }
+
+        .modal-content h3 {
+            margin-top: 0;
+            color: var(--black-text);
+            margin-bottom: 20px;
+        }
+
+        .modal-content input[type="password"],
+        .modal-content input[type="text"],
+        .modal-content input[type="date"] { /* Added date for setup DOB */
+            margin-bottom: 15px;
+            width: calc(100% - 30px); 
+        }
+
+        .modal-content button {
+            width: 100%;
+            padding: 12px;
+            font-size: 1.1rem;
+            margin-top: 10px;
+        }
+        
+        /* Specific modal error styles */
+        #modalNameError,
+        #modalNewPasswordError,
+        #modalConfirmPasswordError,
+        #modalSetupDobError,
+        #modalPasswordError, 
+        #modalDobQuestionError { 
+            color: var(--error-color);
+            margin-top: -10px;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+            text-align: left;
+            display: block; /* Ensure it takes space */
+        }
+
+        .hidden-content, .hidden-field { /* Added .hidden-field for modal fields */
+            display: none !important;
+        }
+
+        .file-actions {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .file-actions button, .file-actions input[type="file"] {
+            flex-grow: 1;
+            max-width: 200px;
+        }
+        .file-actions input[type="file"] {
+            display: none;
+        }
+        .file-actions .upload-button {
+            background-color: #17a2b8;
+            color: var(--white-bg);
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            font-weight: 600;
+            text-align: center;
+        }
+        .file-actions .upload-button:hover {
+            background-color: #138496;
+        }
+        .file-actions #downloadBtn {
+            background-color: #28a745;
+            color: var(--white-bg);
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            font-weight: 600;
+        }
+        .file-actions #downloadBtn:hover {
+            background-color: #218838;
+        }
+
+
         @media (min-width: 600px) {
             .form-grid {
                 grid-template-columns: 1fr 1fr;
             }
-            /* Adjustments for field groups that span columns */
             #billerSelectGroup,
             #addAccountBtn,
             #clearAllBtn,
             #genericAmountSettledGroup,
             #bdoAmountSettledGroup,
-            #ccAmountSettledGroup {
+            #ccAmountSettledGroup,
+            #accountNameGroup,
+            #usernameGroup,
+            #passwordGroup
+            {
                 grid-column: span 2;
             }
-
-            /* For smaller screens, ensure the CC bank dropdown doesn't look odd */
-            #ccBankSelectGroup {
-                grid-column: span 1; /* Reset for CC bank dropdown */
+            #ccBankSelectGroup,
+            #otherAccountNameGroup {
+                grid-column: span 1; 
+            }
+            .search-sort-container {
+                flex-wrap: nowrap; 
             }
         }
 
@@ -273,35 +484,133 @@
             .account-item p {
                 flex-direction: column;
                 align-items: flex-start;
-                gap: 5px;
+                gap: 3px;
             }
-            .copy-btn {
-                margin-left: 0;
-                align-self: flex-end;
+            .account-item strong {
+                min-width: unset;
+                margin-right: 0;
+                margin-bottom: 2px;
+            }
+            .copyable-info {
+                width: 100%;
+                text-align: left;
+            }
+            .search-sort-container {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .search-sort-container input,
+            .search-sort-container button {
+                width: 100%;
+                margin-top: 5px; 
+            }
+            .file-actions {
+                flex-direction: column;
+            }
+            .file-actions button, .file-actions input[type="file"] {
+                max-width: 100%;
             }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Account Settlement Tracker</h1>
+    <div id="passwordProtectionModal" class="modal-overlay">
+        <div class="modal-content">
+            <h3 id="modalTitle">Enter Master Password</h3>
+
+            <div id="setupFields">
+                <input type="text" id="userNameSetupInput" placeholder="Your Name">
+                <div id="modalNameError" class="validation-error"></div>
+                <input type="password" id="masterPasswordSetupInput" placeholder="Set Your Password">
+                <div id="modalNewPasswordError" class="validation-error"></div>
+                <input type="password" id="confirmPasswordSetupInput" placeholder="Confirm Your Password">
+                <div id="modalConfirmPasswordError" class="validation-error"></div>
+                <input type="text" id="dobSetupInput" placeholder="Your Date of Birth (MM/DD/YYYY)">
+                <div id="modalSetupDobError" class="validation-error"></div>
+            </div>
+
+            <div id="loginFields">
+                <input type="password" id="masterPasswordInput" placeholder="Master Password">
+                <div id="modalPasswordError" class="validation-error"></div>
+                <input type="text" id="dobQuestionInput" placeholder="What is your DOB (MM/DD/YYYY)?" class="hidden-field">
+                <div id="modalDobQuestionError" class="validation-error"></div>
+            </div>
+            
+            <button id="accessAppBtn" class="btn-primary">Access Application</button>
+        </div>
+    </div>
+
+    <div class="container hidden-content" id="appContent">
+        <h1>Information Saver</h1>
+        <p style="text-align:center; margin-top:-20px; margin-bottom:20px;" id="welcomeMessage"></p>
+
+        <div class="search-sort-container">
+            <input type="text" id="searchBar" placeholder="Search accounts...">
+            <button id="sortBtn">Sort A-Z</button>
+        </div>
 
         <div class="form-grid">
             <div class="form-group" id="billerSelectGroup">
-                <label for="billerSelect">Select Biller:</label>
+                <label for="billerSelect">Select Category:</label>
                 <select id="billerSelect">
                     <option value="">-- Please Select --</option>
-                    <option value="PLDT">PLDT</option>
-                    <option value="SHOPEE">SHOPEE</option>
-                    <option value="GCASH">GCASH</option>
-                    <option value="SEABANK PH">SEABANK PH</option>
-                    <option value="PAYMAYA">PAYMAYA</option>
-                    <option value="MOVEIT">MOVEIT</option>
-                    <option value="LAZADA PH">LAZADA PH</option>
-                    <option value="BDO">BDO</option>
-                    <option value="CREDIT CARD">CREDIT CARD</option>
+                    <option value="Accounts">Accounts</option>
+                    <option value="CREDIT CARD">Credit Cards</option>
+                    <option value="Billers">Billers</option>
                 </select>
                 <div class="validation-error" id="billerSelect-error"></div>
+            </div>
+
+            <div class="form-group" id="billerSpecificSelectGroup" style="display: none;">
+                <label for="billerSpecificSelect">Select Biller:</label>
+                <select id="billerSpecificSelect">
+                    <option value="">-- Select Biller --</option>
+                    <option value="PLDT">PLDT</option>
+                    <option value="SHOPEE">Shopee</option>
+                    <option value="GCASH">Gcash</option>
+                    <option value="SEABANK PH">Seabank Philippines</option>
+                    <option value="PAYMAYA">Paymaya</option>
+                    <option value="MOVEIT">Move it</option>
+                    <option value="LAZADA PH">Lazada Philippines</option>
+                    <option value="BDO">BDO Unibank</option>
+                </select>
+                <div class="validation-error" id="billerSpecificSelect-error"></div>
+            </div>
+
+            <div class="form-group" id="accountNameGroup" style="display: none;">
+                <label for="accountNameSelect">Account Name:</label>
+                <select id="accountNameSelect">
+                    <option value="">-- Select Account Type --</option>
+                    <option value="PAGIBIG PH">PAGIBIG PH</option>
+                    <option value="SSS">SSS</option>
+                    <option value="Philhealth">Philhealth</option>
+                    <option value="Google">Google</option>
+                    <option value="Yahoo">Yahoo</option>
+                    <option value="Instagram">Instagram</option>
+                    <option value="Facebook">Facebook</option>
+                    <option value="YouTube">YouTube</option>
+                    <option value="LinkedIn">LinkedIn</option>
+                    <option value="Other">Other</option>
+                </select>
+                <div class="validation-error" id="accountNameSelect-error"></div>
+            </div>
+
+            <div class="form-group" id="otherAccountNameGroup" style="display: none;">
+                <label for="otherAccountName">Other Account Name:</label>
+                <input type="text" id="otherAccountName" placeholder="e.g., Netflix">
+                <div class="validation-error" id="otherAccountName-error"></div>
+            </div>
+
+            <div class="form-group" id="usernameGroup" style="display: none;">
+                <label for="usernameInput">Username:</label>
+                <input type="text" id="usernameInput" placeholder="Enter username">
+                <div class="validation-error" id="username-error"></div>
+            </div>
+
+            <div class="form-group" id="passwordGroup" style="display: none;">
+                <label for="passwordInput">Password:</label>
+                <input type="password" id="passwordInput" placeholder="Enter password">
+                <div class="validation-error" id="password-error"></div>
             </div>
 
             <div class="form-group" id="ccBankSelectGroup" style="display: none;">
@@ -310,24 +619,25 @@
                     <option value="">-- Select Bank --</option>
                     <option value="BDO">BDO</option>
                     <option value="BPI">BPI</option>
-                    <option value="UNIONBANK">UNIONBANK</option>
-                    <option value="METROBANK">METROBANK</option>
+                    <option value="UNIONBANK">Unionbank</option>
+                    <option value="METROBANK">Metrobank</option>
                     <option value="RCBC">RCBC</option>
                     <option value="PNB">PNB</option>
-                    <option value="SECURITY BANK">SECURITY BANK</option>
-                    <option value="CHINABANK">CHINABANK</option>
-                    <option value="EASTWEST BANK">EASTWEST BANK</option>
+                    <option value="SECURITY BANK">Security Bank</option>
+                    <option value="CHINABANK">Chinabank</option>
+                    <option value="EASTWEST BANK">Eastwest Bank</option>
                     <option value="HSBC">HSBC</option>
-                    <option value="CITIBANK">CITIBANK</option>
+                    <option value="CITIBANK">Citibank</option>
                     <option value="AUB">AUB</option>
-                    <option value="LANDBANK">LANDBANK</option>
-                    <option value="MAYBANK">MAYBANK</option>
-                    <option value="CEBUANA LHUILLIER RURAL BANK">CEBUANA LHUILLIER RURAL BANK</option>
-                    <option value="SEABANK PH (Credit Card)">SEABANK PH</option>
-                    <option value="OTHER BANK">OTHER BANK</option>
+                    <option value="LANDBANK">Landbank</option>
+                    <option value="MAYBANK">Maybank</option>
+                    <option value="CEBUANA LHUILLIER RURAL BANK">Cebuana Lhuillier Rural Bank</option>
+                    <option value="SEABANK PH">Seabank Philippines</option>
+                    <option value="OTHER BANK">Other banks</option>
                 </select>
                 <div class="validation-error" id="ccBankSelect-error"></div>
             </div>
+
 
             <div class="form-group" id="genericAccountHolderGroup" style="display: none;">
                 <label for="genericAccountHolder">Account Holder:</label>
@@ -414,24 +724,77 @@
             <button class="btn-secondary" id="clearAllBtn">Clear All Data</button>
         </div>
 
-        <h2>Added Accounts</h2>
-        <div class="accounts-list" id="accountsList">
+        <button class="toggle-data-btn" id="toggleDataBtn">Show Saved Information</button>
+
+        <div id="savedDataSection">
+            <h2>Saved Information</h2>
+            <div class="file-actions">
+                <button id="downloadBtn">Download Data (JSON)</button>
+                <input type="file" id="uploadInput" accept=".json">
+                <button class="upload-button" onclick="document.getElementById('uploadInput').click();">Upload Data (JSON)</button>
+            </div>
+            <div class="accounts-list" id="accountsList">
+            </div>
         </div>
     </div>
 
     <div id="toastMessage" class="toast-message"></div>
 
     <script>
-        const billerSelect = document.getElementById('billerSelect');
-        const ccBankSelect = document.getElementById('ccBankSelect'); // New dropdown for CC banks
+        // REMOVED: const MASTER_PASSWORD = "MVSu0XdzC";
+        // REMOVED: const DOB_Youtube = "11/13/1997"; 
 
-        // Generic fields
+        const USER_DATA_STORAGE_KEY = 'personalAccountSaverUserData';
+        let currentUserData = null; // Will hold { name, password, dob }
+        let isSetupMode = false;
+        let passwordAttempts = 0;
+
+        const passwordProtectionModal = document.getElementById('passwordProtectionModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const welcomeMessage = document.getElementById('welcomeMessage');
+
+        // Setup fields
+        const setupFieldsContainer = document.getElementById('setupFields');
+        const userNameSetupInput = document.getElementById('userNameSetupInput');
+        const masterPasswordSetupInput = document.getElementById('masterPasswordSetupInput');
+        const confirmPasswordSetupInput = document.getElementById('confirmPasswordSetupInput');
+        const dobSetupInput = document.getElementById('dobSetupInput');
+        const modalNameError = document.getElementById('modalNameError');
+        const modalNewPasswordError = document.getElementById('modalNewPasswordError');
+        const modalConfirmPasswordError = document.getElementById('modalConfirmPasswordError');
+        const modalSetupDobError = document.getElementById('modalSetupDobError');
+
+        // Login fields
+        const loginFieldsContainer = document.getElementById('loginFields');
+        const masterPasswordInput = document.getElementById('masterPasswordInput'); // For login
+        const dobQuestionInput = document.getElementById('dobQuestionInput'); // For login
+        const modalPasswordError = document.getElementById('modalPasswordError'); 
+        const modalDobQuestionError = document.getElementById('modalDobQuestionError');
+        
+        const accessAppBtn = document.getElementById('accessAppBtn');
+        const appContent = document.getElementById('appContent');
+
+
+        const billerSelect = document.getElementById('billerSelect');
+        const billerSpecificSelectGroup = document.getElementById('billerSpecificSelectGroup');
+        const billerSpecificSelect = document.getElementById('billerSpecificSelect');
+        const ccBankSelect = document.getElementById('ccBankSelect');
+
+        const accountNameGroup = document.getElementById('accountNameGroup');
+        const accountNameSelect = document.getElementById('accountNameSelect');
+        const otherAccountNameGroup = document.getElementById('otherAccountNameGroup');
+        const otherAccountNameInput = document.getElementById('otherAccountName');
+        const usernameGroup = document.getElementById('usernameGroup');
+        const usernameInput = document.getElementById('usernameInput');
+        const passwordGroup = document.getElementById('passwordGroup');
+        const passwordInput = document.getElementById('passwordInput');
+
         const genericAccountHolderGroup = document.getElementById('genericAccountHolderGroup');
         const genericAccountHolderInput = document.getElementById('genericAccountHolder');
         const genericAccountNumberGroup = document.getElementById('genericAccountNumberGroup');
         const genericAccountNumberInput = document.getElementById('genericAccountNumber');
         const genericTelephoneNumberGroup = document.getElementById('genericTelephoneNumberGroup');
-        const genericTelephoneNumberInput = document.getElementById('genericTelephoneNumber');
+        const genericTelephoneNumberInput = document.getElementById('genericTelephoneNumber'); // Added this variable
         const genericEmailAddressGroup = document.getElementById('genericEmailAddressGroup');
         const genericEmailAddressInput = document.getElementById('genericEmailAddress');
         const genericAmountSettledGroup = document.getElementById('genericAmountSettledGroup');
@@ -439,7 +802,6 @@
         const genericRemarksGroup = document.getElementById('genericRemarksGroup');
         const genericRemarksInput = document.getElementById('genericRemarks');
 
-        // BDO specific fields
         const bdoAccountGroup = document.getElementById('bdoAccountGroup');
         const bdoAccountHolderGroup = document.getElementById('bdoAccountHolderGroup');
         const bdoAccountHolderInput = document.getElementById('bdoAccountHolder');
@@ -448,8 +810,7 @@
         const bdoAmountSettledGroup = document.getElementById('bdoAmountSettledGroup');
         const bdoAmountSettledInput = document.getElementById('bdoAmountSettled');
 
-        // Credit Card specific fields
-        const ccBankSelectGroup = document.getElementById('ccBankSelectGroup'); // Group for the new dropdown
+        const ccBankSelectGroup = document.getElementById('ccBankSelectGroup');
         const ccCreditCardNumberGroup = document.getElementById('ccCreditCardNumberGroup');
         const ccCreditCardNumberInput = document.getElementById('ccCreditCardNumber');
         const ccAccountHolderGroup = document.getElementById('ccAccountHolderGroup');
@@ -460,7 +821,7 @@
         const ccBillingStatementDateInput = document.getElementById('ccBillingStatementDate');
         const ccContactNumberGroup = document.getElementById('ccContactNumberGroup');
         const ccContactNumberInput = document.getElementById('ccContactNumber');
-        const ccEmailAddressGroup = document.getElementById('ccEmailAddressGroup');
+        const ccEmailAddressGroup = document.getElementById('ccEmailAddressGroup'); 
         const ccEmailAddressInput = document.getElementById('ccEmailAddress');
         const ccRemarksGroup = document.getElementById('ccRemarksGroup');
         const ccRemarksInput = document.getElementById('ccRemarks');
@@ -469,27 +830,37 @@
         const clearAllBtn = document.getElementById('clearAllBtn');
         const accountsList = document.getElementById('accountsList');
         const toastMessage = document.getElementById('toastMessage');
+        const searchBar = document.getElementById('searchBar');
+        const sortBtn = document.getElementById('sortBtn');
 
-        // Error message elements
         const billerSelectError = document.getElementById('billerSelect-error');
-        const ccBankSelectError = document.getElementById('ccBankSelect-error'); // Error for new CC bank dropdown
+        const billerSpecificSelectError = document.getElementById('billerSpecificSelect-error'); 
+        const ccBankSelectError = document.getElementById('ccBankSelect-error');
         const genericAccountHolderError = document.getElementById('genericAccountHolder-error');
         const genericAccountNumberError = document.getElementById('genericAccountNumber-error');
         const genericAmountSettledError = document.getElementById('genericAmountSettled-error');
-
         const bdoAccountHolderError = document.getElementById('bdoAccountHolder-error');
         const bdoAccountNumberError = document.getElementById('bdoAccountNumber-error');
         const bdoAmountSettledError = document.getElementById('bdoAmountSettled-error');
-
         const ccCreditCardNumberError = document.getElementById('ccCreditCardNumber-error');
         const ccAccountHolderError = document.getElementById('ccAccountHolder-error');
         const ccAmountSettledError = document.getElementById('ccAmountSettled-error');
         const ccBillingStatementDateError = document.getElementById('ccBillingStatementDate-error');
+        const accountNameSelectError = document.getElementById('accountNameSelect-error');
+        const otherAccountNameError = document.getElementById('otherAccountName-error');
+        const usernameError = document.getElementById('username-error');
+        const passwordError = document.getElementById('password-error'); 
 
+        const toggleDataBtn = document.getElementById('toggleDataBtn');
+        const savedDataSection = document.getElementById('savedDataSection');
+
+        const downloadBtn = document.getElementById('downloadBtn');
+        const uploadInput = document.getElementById('uploadInput');
 
         let accounts = [];
+        let displayedAccounts = [];
+        // let passwordAttempts = 0; // Already defined above
 
-        // Function to show toast messages
         function showToast(message, type = 'success') {
             toastMessage.textContent = message;
             toastMessage.className = 'toast-message show';
@@ -500,11 +871,141 @@
             }
             setTimeout(() => {
                 toastMessage.className = 'toast-message';
-                toastMessage.style.backgroundColor = 'var(--toast-bg)'; // Reset color
+                toastMessage.style.backgroundColor = 'var(--toast-bg)'; // Reset to default
             }, 3000);
         }
 
-        // Function to copy text to clipboard
+        function clearModalErrors() {
+            modalNameError.textContent = '';
+            modalNewPasswordError.textContent = '';
+            modalConfirmPasswordError.textContent = '';
+            modalSetupDobError.textContent = '';
+            modalPasswordError.textContent = '';
+            modalDobQuestionError.textContent = '';
+        }
+
+        function checkUserSetup() {
+            const storedUserData = localStorage.getItem(USER_DATA_STORAGE_KEY);
+            clearModalErrors(); // Clear any previous errors
+
+            if (storedUserData) {
+                currentUserData = JSON.parse(storedUserData);
+                isSetupMode = false;
+                modalTitle.textContent = `Welcome back, ${currentUserData.name}!`;
+                setupFieldsContainer.classList.add('hidden-field');
+                loginFieldsContainer.classList.remove('hidden-field');
+                masterPasswordInput.classList.remove('hidden-field');
+                dobQuestionInput.classList.add('hidden-field'); // Hide DOB initially
+                accessAppBtn.textContent = 'Access Application';
+                masterPasswordInput.focus();
+            } else {
+                isSetupMode = true;
+                modalTitle.textContent = 'Create Your Profile';
+                setupFieldsContainer.classList.remove('hidden-field');
+                loginFieldsContainer.classList.add('hidden-field');
+                accessAppBtn.textContent = 'Save and Access';
+                userNameSetupInput.focus();
+            }
+            passwordProtectionModal.style.display = 'flex';
+            appContent.classList.add('hidden-content');
+        }
+
+
+        accessAppBtn.addEventListener('click', () => {
+            clearModalErrors();
+
+            if (isSetupMode) {
+                // --- SETUP MODE ---
+                const name = userNameSetupInput.value.trim();
+                const newPassword = masterPasswordSetupInput.value.trim();
+                const confirmPassword = confirmPasswordSetupInput.value.trim();
+                const dob = dobSetupInput.value.trim();
+                let isValidSetup = true;
+
+                if (!name) {
+                    modalNameError.textContent = 'Name is required.';
+                    isValidSetup = false;
+                }
+                if (!newPassword) {
+                    modalNewPasswordError.textContent = 'Password is required.';
+                    isValidSetup = false;
+                }
+                if (newPassword !== confirmPassword) {
+                    modalConfirmPasswordError.textContent = 'Passwords do not match.';
+                    isValidSetup = false;
+                }
+                // Basic DOB format validation (MM/DD/YYYY)
+                if (!/^\d{2}\/\d{2}\/\d{4}$/.test(dob)) {
+                    modalSetupDobError.textContent = 'DOB must be in MM/DD/YYYY format.';
+                    isValidSetup = false;
+                }
+
+                if (isValidSetup) {
+                    currentUserData = { name: name, password: newPassword, dob: dob };
+                    localStorage.setItem(USER_DATA_STORAGE_KEY, JSON.stringify(currentUserData));
+                    isSetupMode = false; // Switch out of setup mode
+                    passwordProtectionModal.style.display = 'none';
+                    appContent.classList.remove('hidden-content');
+                    welcomeMessage.textContent = `Hello, ${currentUserData.name}!`;
+                    loadAccounts(); // Load any previously stored app data (though likely none on first setup)
+                    showToast('Profile created successfully! Access granted.', 'success');
+                }
+
+            } else {
+                // --- LOGIN MODE ---
+                if (!currentUserData) { // Should not happen if setup check worked
+                    showToast('Error: User data not loaded. Please refresh.', 'error');
+                    return;
+                }
+
+                const enteredPassword = masterPasswordInput.value.trim();
+                const enteredDob = dobQuestionInput.value.trim();
+
+                if (dobQuestionInput.classList.contains('hidden-field')) { // Trying password
+                    if (enteredPassword === currentUserData.password) {
+                        passwordProtectionModal.style.display = 'none';
+                        appContent.classList.remove('hidden-content');
+                        welcomeMessage.textContent = `Hello, ${currentUserData.name}!`;
+                        loadAccounts();
+                        showToast('Access granted!', 'success');
+                        passwordAttempts = 0; // Reset attempts
+                        masterPasswordInput.value = ''; // Clear field
+                        dobQuestionInput.value = ''; // Clear field
+                    } else {
+                        passwordAttempts++;
+                        masterPasswordInput.value = ''; // Clear field
+                        if (passwordAttempts < 3) {
+                            modalPasswordError.textContent = `Incorrect password. ${3 - passwordAttempts} attempts remaining.`;
+                        } else {
+                            modalPasswordError.textContent = 'Too many incorrect attempts. Enter your DOB.';
+                            masterPasswordInput.classList.add('hidden-field');
+                            dobQuestionInput.classList.remove('hidden-field');
+                            dobQuestionInput.focus();
+                            accessAppBtn.textContent = 'Verify DOB';
+                        }
+                    }
+                } else { // Trying DOB
+                    if (enteredDob === currentUserData.dob) {
+                        passwordProtectionModal.style.display = 'none';
+                        appContent.classList.remove('hidden-content');
+                        welcomeMessage.textContent = `Hello, ${currentUserData.name}!`;
+                        loadAccounts();
+                        showToast('Access granted via DOB!', 'success');
+                        passwordAttempts = 0; // Reset attempts
+                        // Reset modal for next time
+                        masterPasswordInput.value = '';
+                        dobQuestionInput.value = '';
+                        masterPasswordInput.classList.remove('hidden-field');
+                        dobQuestionInput.classList.add('hidden-field');
+                        accessAppBtn.textContent = 'Access Application';
+                    } else {
+                        modalDobQuestionError.textContent = 'Incorrect Date of Birth. Please try again.';
+                        dobQuestionInput.value = '';
+                    }
+                }
+            }
+        });
+
         async function copyToClipboard(text, element) {
             try {
                 await navigator.clipboard.writeText(text);
@@ -523,60 +1024,80 @@
             }
         }
 
-        // Function to clear all validation errors
-        function clearAllErrors() {
-            document.querySelectorAll('.validation-error').forEach(errorElement => {
+        function clearAllErrors() { // For main form errors
+            document.querySelectorAll('.validation-error:not(#modalNameError):not(#modalNewPasswordError):not(#modalConfirmPasswordError):not(#modalSetupDobError):not(#modalPasswordError):not(#modalDobQuestionError)')
+                .forEach(errorElement => {
                 errorElement.textContent = '';
             });
         }
 
-        // Function to validate inputs based on selected biller
         function validateInputs() {
             clearAllErrors();
             let isValid = true;
-            const selectedBiller = billerSelect.value;
+            const selectedBillerCategory = billerSelect.value;
 
-            if (selectedBiller === '') {
-                billerSelectError.textContent = 'Please select a biller.';
+            if (selectedBillerCategory === '') {
+                billerSelectError.textContent = 'Please select a category.';
                 isValid = false;
             }
 
-            if (selectedBiller && selectedBiller !== 'BDO' && selectedBiller !== 'CREDIT CARD') {
-                // Generic fields validation
-                if (genericAccountHolderInput.value.trim() === '') {
-                    genericAccountHolderError.textContent = 'Account holder name is required.';
+            if (selectedBillerCategory === 'Accounts') {
+                if (accountNameSelect.value === '') {
+                    accountNameSelectError.textContent = 'Please select an account type.';
+                    isValid = false;
+                } else if (accountNameSelect.value === 'Other' && otherAccountNameInput.value.trim() === '') {
+                    otherAccountNameError.textContent = 'Please enter the other account name.';
                     isValid = false;
                 }
-                if (genericAccountNumberInput.value.trim() === '') {
-                    genericAccountNumberError.textContent = 'Account/Reference number is required.';
+                if (usernameInput.value.trim() === '') {
+                    usernameError.textContent = 'Username is required.';
                     isValid = false;
                 }
-                if (genericAmountSettledInput.value.trim() === '' || isNaN(parseFloat(genericAmountSettledInput.value))) {
-                    genericAmountSettledError.textContent = 'Valid amount is required.';
-                    isValid = false;
-                } else if (parseFloat(genericAmountSettledInput.value) <= 0) {
-                    genericAmountSettledError.textContent = 'Amount must be greater than zero.';
+                if (passwordInput.value.trim() === '') {
+                    passwordError.textContent = 'Password is required.';
                     isValid = false;
                 }
-            } else if (selectedBiller === 'BDO') {
-                // BDO specific fields validation
-                if (bdoAccountHolderInput.value.trim() === '') {
-                    bdoAccountHolderError.textContent = 'Account holder name is required.';
+            } else if (selectedBillerCategory === 'Billers') {
+                 if (billerSpecificSelect.value === '') {
+                    billerSpecificSelectError.textContent = 'Please select a specific biller.';
                     isValid = false;
                 }
-                if (bdoAccountNumberInput.value.trim() === '') {
-                    bdoAccountNumberError.textContent = 'Account number is required.';
-                    isValid = false;
+                const selectedBillerSpecific = billerSpecificSelect.value;
+                if (selectedBillerSpecific === 'BDO') {
+                    if (bdoAccountHolderInput.value.trim() === '') {
+                        bdoAccountHolderError.textContent = 'Account holder name is required.';
+                        isValid = false;
+                    }
+                    if (bdoAccountNumberInput.value.trim() === '') {
+                        bdoAccountNumberError.textContent = 'Account number is required.';
+                        isValid = false;
+                    }
+                    if (bdoAmountSettledInput.value.trim() === '' || isNaN(parseFloat(bdoAmountSettledInput.value))) {
+                        bdoAmountSettledError.textContent = 'Valid amount is required.';
+                        isValid = false;
+                    } else if (parseFloat(bdoAmountSettledInput.value) <= 0) {
+                        bdoAmountSettledError.textContent = 'Amount must be greater than zero.';
+                        isValid = false;
+                    }
+                } else if (selectedBillerSpecific !== '') { 
+                    if (genericAccountHolderInput.value.trim() === '') {
+                        genericAccountHolderError.textContent = 'Account holder name is required.';
+                        isValid = false;
+                    }
+                    if (genericAccountNumberInput.value.trim() === '') {
+                        genericAccountNumberError.textContent = 'Account/Reference number is required.';
+                        isValid = false;
+                    }
+                    if (genericAmountSettledInput.value.trim() === '' || isNaN(parseFloat(genericAmountSettledInput.value))) {
+                        genericAmountSettledError.textContent = 'Valid amount is required.';
+                        isValid = false;
+                    } else if (parseFloat(genericAmountSettledInput.value) <= 0) {
+                        genericAmountSettledError.textContent = 'Amount must be greater than zero.';
+                        isValid = false;
+                    }
                 }
-                if (bdoAmountSettledInput.value.trim() === '' || isNaN(parseFloat(bdoAmountSettledInput.value))) {
-                    bdoAmountSettledError.textContent = 'Valid amount is required.';
-                    isValid = false;
-                } else if (parseFloat(bdoAmountSettledInput.value) <= 0) {
-                    bdoAmountSettledError.textContent = 'Amount must be greater than zero.';
-                    isValid = false;
-                }
-            } else if (selectedBiller === 'CREDIT CARD') {
-                // Credit Card specific fields validation
+            }
+            else if (selectedBillerCategory === 'CREDIT CARD') {
                 if (ccBankSelect.value === '') {
                     ccBankSelectError.textContent = 'Please select a credit card issuing bank.';
                     isValid = false;
@@ -604,88 +1125,95 @@
             return isValid;
         }
 
-        // Function to render accounts
-        function renderAccounts() {
-            accountsList.innerHTML = ''; // Clear current list
+        function renderAccounts(accountsToRender = accounts) {
+            accountsList.innerHTML = '';
+            displayedAccounts = [...accountsToRender];
 
-            if (accounts.length === 0) {
-                accountsList.innerHTML = '<p style="text-align: center; color: #6c757d;">No accounts added yet. Add one above!</p>';
+            if (displayedAccounts.length === 0) {
+                accountsList.innerHTML = '<p style="text-align: center; color: #6c757d;">No accounts found.</p>';
                 return;
             }
 
-            accounts.forEach((acc) => {
+            displayedAccounts.forEach((acc) => {
                 const accountItem = document.createElement('div');
                 accountItem.classList.add('account-item');
-                accountItem.setAttribute('data-id', acc.id); // Use a unique ID for deletion
+                accountItem.setAttribute('data-id', acc.id);
 
-                let detailsHtml = `
-                    <p><strong>Biller:</strong> <span>${acc.biller}</span> <button class="copy-btn" data-field="biller">📋 Copy</button></p>
-                    <button class="delete-btn" data-id="${acc.id}">Delete</button>
-                `;
-
-                if (acc.biller === 'BDO') {
-                    detailsHtml += `
-                        <p><strong>Account:</strong> <span>${acc.account}</span> <button class="copy-btn" data-field="account">📋 Copy</button></p>
-                        <p><strong>Account Holder:</strong> <span>${acc.accountHolder}</span> <button class="copy-btn" data-field="accountHolder">📋 Copy</button></p>
-                        <p><strong>Account Number:</strong> <span>${acc.accountNumber}</span> <button class="copy-btn" data-field="accountNumber">📋 Copy</button></p>
-                        <p><strong>Amount:</strong> <span>₱ ${parseFloat(acc.amountToSettle).toFixed(2)}</span> <button class="copy-btn" data-field="amountToSettle">📋 Copy</button></p>
-                    `;
-                } else if (acc.biller === 'CREDIT CARD') {
-                    detailsHtml += `
-                        <p><strong>Bank:</strong> <span>${acc.creditCardBank}</span> <button class="copy-btn" data-field="creditCardBank">📋 Copy</button></p>
-                        <p><strong>Credit Card Number:</strong> <span>${acc.creditCardNumber}</span> <button class="copy-btn" data-field="creditCardNumber">📋 Copy</button></p>
-                        <p><strong>Account Holder:</strong> <span>${acc.accountHolder}</span> <button class="copy-btn" data-field="accountHolder">📋 Copy</button></p>
-                        <p><strong>Amount:</strong> <span>₱ ${parseFloat(acc.amountToSettle).toFixed(2)}</span> <button class="copy-btn" data-field="amountToSettle">📋 Copy</button></p>
-                        <p><strong>Billing Statement Date:</strong> <span>${acc.billingStatementDate || 'N/A'}</span> <button class="copy-btn" data-field="billingStatementDate">📋 Copy</button></p>
-                        <p><strong>Contact Number:</strong> <span>${acc.contactNumber || 'N/A'}</span> <button class="copy-btn" data-field="contactNumber">📋 Copy</button></p>
-                        <p><strong>Email Address:</strong> <span>${acc.emailAddress || 'N/A'}</span> <button class="copy-btn" data-field="emailAddress">📋 Copy</button></p>
-                        <p><strong>Remarks:</strong> <span>${acc.remarks || 'N/A'}</span> <button class="copy-btn" data-field="remarks">📋 Copy</button></p>
-                    `;
-                } else {
-                    detailsHtml += `
-                        <p><strong>Account Holder:</strong> <span>${acc.accountHolder}</span> <button class="copy-btn" data-field="accountHolder">📋 Copy</button></p>
-                        <p><strong>Account/Ref. Number:</strong> <span>${acc.accountNumber}</span> <button class="copy-btn" data-field="accountNumber">📋 Copy</button></p>
-                        <p><strong>Contact Number:</strong> <span>${acc.telephoneNumber || 'N/A'}</span> <button class="copy-btn" data-field="telephoneNumber">📋 Copy</button></p>
-                        <p><strong>Email Address:</strong> <span>${acc.emailAddress || 'N/A'}</span> <button class="copy-btn" data-field="emailAddress">📋 Copy</button></p>
-                        <p><strong>Amount:</strong> <span>₱ ${parseFloat(acc.amountToSettle).toFixed(2)}</span> <button class="copy-btn" data-field="amountToSettle">📋 Copy</button></p>
-                        <p><strong>Remarks:</strong> <span>${acc.remarks || 'N/A'}</span> <button class="copy-btn" data-field="remarks">📋 Copy</button></p>
-                    `;
+                function createInfoParagraph(label, value, isPassword = false) {
+                    const displayValue = value || 'N/A';
+                    if (isPassword) {
+                        return `<p><strong>${label}:</strong> <span class="copyable-info" data-password="${value}">**********</span></p>`;
+                    }
+                    return `<p><strong>${label}:</strong> <span class="copyable-info">${displayValue}</span></p>`;
                 }
+                
+                let detailsHtml = createInfoParagraph('Category', acc.billerCategory);
+                if (acc.billerSpecific) {
+                    detailsHtml += createInfoParagraph('Biller', acc.billerSpecific);
+                }
+                detailsHtml += `<button class="delete-btn" data-id="${acc.id}">Delete</button>`;
+
+                if (acc.billerCategory === 'Accounts') {
+                    detailsHtml += createInfoParagraph('Account Name', acc.accountName);
+                    detailsHtml += createInfoParagraph('Username', acc.username);
+                    detailsHtml += createInfoParagraph('Password', acc.password, true); 
+                } else if (acc.billerSpecific === 'BDO') { 
+                    detailsHtml += createInfoParagraph('Account', acc.account);
+                    detailsHtml += createInfoParagraph('Account Holder', acc.accountHolder);
+                    detailsHtml += createInfoParagraph('Account Number', acc.accountNumber);
+                    detailsHtml += createInfoParagraph('Amount', `₱ ${parseFloat(acc.amountToSettle).toFixed(2)}`);
+                } else if (acc.billerCategory === 'CREDIT CARD') {
+                    detailsHtml += createInfoParagraph('Bank', acc.creditCardBank);
+                    detailsHtml += createInfoParagraph('Credit Card Number', acc.creditCardNumber);
+                    detailsHtml += createInfoParagraph('Account Holder', acc.accountHolder);
+                    detailsHtml += createInfoParagraph('Amount', `₱ ${parseFloat(acc.amountToSettle).toFixed(2)}`);
+                    detailsHtml += createInfoParagraph('Billing Statement Date', acc.billingStatementDate);
+                    detailsHtml += createInfoParagraph('Contact Number', acc.contactNumber);
+                    detailsHtml += createInfoParagraph('Email Address', acc.emailAddress);
+                    detailsHtml += createInfoParagraph('Remarks', acc.remarks);
+                } else if (acc.billerCategory === 'Billers') { 
+                    detailsHtml += createInfoParagraph('Account Holder', acc.accountHolder);
+                    detailsHtml += createInfoParagraph('Account/Ref. Number', acc.accountNumber);
+                    detailsHtml += createInfoParagraph('Contact Number', acc.telephoneNumber); // Corrected from genericTelephoneNumberInput
+                    detailsHtml += createInfoParagraph('Email Address', acc.emailAddress);
+                    detailsHtml += createInfoParagraph('Amount', `₱ ${parseFloat(acc.amountToSettle).toFixed(2)}`);
+                    detailsHtml += createInfoParagraph('Remarks', acc.remarks);
+                }
+                detailsHtml += `<button class="copy-all-btn" data-id="${acc.id}">Copy All Info</button>`;
                 accountItem.innerHTML = detailsHtml;
                 accountsList.appendChild(accountItem);
             });
         }
 
-        // Function to save accounts to Local Storage
         function saveAccounts() {
             localStorage.setItem('accounts', JSON.stringify(accounts));
         }
 
-        // Function to load accounts from Local Storage
         function loadAccounts() {
             const storedAccounts = localStorage.getItem('accounts');
             if (storedAccounts) {
                 accounts = JSON.parse(storedAccounts);
             }
-            renderAccounts();
+            applyFiltersAndSort();
         }
 
-        // Function to reset form fields
         function resetFormFields() {
             billerSelect.value = '';
-            ccBankSelect.value = ''; // Reset the new dropdown
-
+            billerSpecificSelect.value = '';
+            ccBankSelect.value = '';
+            accountNameSelect.value = '';
+            otherAccountNameInput.value = '';
+            usernameInput.value = '';
+            passwordInput.value = '';
             genericAccountHolderInput.value = '';
             genericAccountNumberInput.value = '';
             genericTelephoneNumberInput.value = '';
             genericEmailAddressInput.value = '';
             genericAmountSettledInput.value = '';
             genericRemarksInput.value = '';
-
             bdoAccountHolderInput.value = '';
             bdoAccountNumberInput.value = '';
             bdoAmountSettledInput.value = '';
-
             ccCreditCardNumberInput.value = '';
             ccAccountHolderInput.value = '';
             ccAmountSettledInput.value = '';
@@ -693,26 +1221,27 @@
             ccContactNumberInput.value = '';
             ccEmailAddressInput.value = '';
             ccRemarksInput.value = '';
-
             clearAllErrors();
             hideAllFieldGroups();
         }
 
-        // Function to hide all field groups
         function hideAllFieldGroups() {
+            billerSpecificSelectGroup.style.display = 'none';
+            accountNameGroup.style.display = 'none';
+            otherAccountNameGroup.style.display = 'none';
+            usernameGroup.style.display = 'none';
+            passwordGroup.style.display = 'none';
             genericAccountHolderGroup.style.display = 'none';
             genericAccountNumberGroup.style.display = 'none';
             genericTelephoneNumberGroup.style.display = 'none';
             genericEmailAddressGroup.style.display = 'none';
             genericAmountSettledGroup.style.display = 'none';
             genericRemarksGroup.style.display = 'none';
-
             bdoAccountGroup.style.display = 'none';
             bdoAccountHolderGroup.style.display = 'none';
             bdoAccountNumberGroup.style.display = 'none';
             bdoAmountSettledGroup.style.display = 'none';
-
-            ccBankSelectGroup.style.display = 'none'; // Hide the new CC bank dropdown
+            ccBankSelectGroup.style.display = 'none';
             ccCreditCardNumberGroup.style.display = 'none';
             ccAccountHolderGroup.style.display = 'none';
             ccAmountSettledGroup.style.display = 'none';
@@ -722,24 +1251,75 @@
             ccRemarksGroup.style.display = 'none';
         }
 
-        // Event listener for Biller Select dropdown
+        function applyFiltersAndSort() {
+            let filtered = [...accounts];
+            const searchTerm = searchBar.value.toLowerCase();
+
+            if (searchTerm) {
+                filtered = filtered.filter(acc => {
+                    for (const key in acc) {
+                        if (typeof acc[key] === 'string' && acc[key].toLowerCase().includes(searchTerm)) {
+                            return true;
+                        }
+                    }
+                    if (acc.amountToSettle && acc.amountToSettle.toString().includes(searchTerm)) return true;
+                    return false;
+                });
+            }
+
+            filtered.sort((a, b) => {
+                const nameA = (a.billerCategory === 'CREDIT CARD' ? a.creditCardBank || '' : 
+                               (a.billerCategory === 'Accounts' ? a.accountName || '' : a.billerSpecific || a.billerCategory)).toLowerCase();
+                const nameB = (b.billerCategory === 'CREDIT CARD' ? b.creditCardBank || '' : 
+                               (b.billerCategory === 'Accounts' ? b.accountName || '' : b.billerSpecific || b.billerCategory)).toLowerCase();
+                if (nameA < nameB) return -1;
+                if (nameA > nameB) return 1;
+                return 0;
+            });
+
+            renderAccounts(filtered);
+        }
+
         billerSelect.addEventListener('change', () => {
             hideAllFieldGroups();
-            clearAllErrors(); // Clear errors when biller changes
-            ccBankSelect.value = ''; // Reset CC bank selection when biller changes
+            clearAllErrors();
+            billerSpecificSelect.value = '';
+            ccBankSelect.value = '';
+            accountNameSelect.value = '';
+            otherAccountNameInput.value = '';
+            
+            const selectedBillerCategory = billerSelect.value;
+            if (selectedBillerCategory === 'Accounts') {
+                accountNameGroup.style.display = 'flex';
+                usernameGroup.style.display = 'flex';
+                passwordGroup.style.display = 'flex';
+            } else if (selectedBillerCategory === 'Billers') {
+                billerSpecificSelectGroup.style.display = 'flex';
+            } else if (selectedBillerCategory === 'CREDIT CARD') {
+                ccBankSelectGroup.style.display = 'flex';
+            }
+        });
 
-            const selectedBiller = billerSelect.value;
+        billerSpecificSelect.addEventListener('change', () => {
+            genericAccountHolderGroup.style.display = 'none';
+            genericAccountNumberGroup.style.display = 'none';
+            genericTelephoneNumberGroup.style.display = 'none';
+            genericEmailAddressGroup.style.display = 'none';
+            genericAmountSettledGroup.style.display = 'none';
+            genericRemarksGroup.style.display = 'none';
+            bdoAccountGroup.style.display = 'none';
+            bdoAccountHolderGroup.style.display = 'none';
+            bdoAccountNumberGroup.style.display = 'none';
+            bdoAmountSettledGroup.style.display = 'none';
+            clearAllErrors();
 
+            const selectedBiller = billerSpecificSelect.value;
             if (selectedBiller === 'BDO') {
                 bdoAccountGroup.style.display = 'flex';
                 bdoAccountHolderGroup.style.display = 'flex';
                 bdoAccountNumberGroup.style.display = 'flex';
                 bdoAmountSettledGroup.style.display = 'flex';
-            } else if (selectedBiller === 'CREDIT CARD') {
-                ccBankSelectGroup.style.display = 'flex'; // Show the new CC bank dropdown
-                // Other CC fields will be shown when a bank is selected from ccBankSelect
-            } else if (selectedBiller !== '') {
-                // For all other generic billers
+            } else if (selectedBiller !== '') { 
                 genericAccountHolderGroup.style.display = 'flex';
                 genericAccountNumberGroup.style.display = 'flex';
                 genericTelephoneNumberGroup.style.display = 'flex';
@@ -749,9 +1329,16 @@
             }
         });
 
-        // Event listener for Credit Card Bank Select dropdown
+        accountNameSelect.addEventListener('change', () => {
+            if (accountNameSelect.value === 'Other') {
+                otherAccountNameGroup.style.display = 'flex';
+            } else {
+                otherAccountNameGroup.style.display = 'none';
+                otherAccountNameInput.value = '';
+            }
+        });
+
         ccBankSelect.addEventListener('change', () => {
-            // Hide all CC fields except the bank select
             ccCreditCardNumberGroup.style.display = 'none';
             ccAccountHolderGroup.style.display = 'none';
             ccAmountSettledGroup.style.display = 'none';
@@ -759,11 +1346,8 @@
             ccContactNumberGroup.style.display = 'none';
             ccEmailAddressGroup.style.display = 'none';
             ccRemarksGroup.style.display = 'none';
-
-            clearAllErrors(); // Clear errors when CC bank changes
-
+            clearAllErrors();
             if (ccBankSelect.value !== '') {
-                // Show CC specific fields once a bank is selected
                 ccCreditCardNumberGroup.style.display = 'flex';
                 ccAccountHolderGroup.style.display = 'flex';
                 ccAmountSettledGroup.style.display = 'flex';
@@ -774,107 +1358,251 @@
             }
         });
 
-        // Event listener for Add Account button
         addAccountBtn.addEventListener('click', () => {
             if (!validateInputs()) {
                 showToast('Please fill in all required fields correctly.', 'error');
                 return;
             }
+            const selectedBillerCategory = billerSelect.value;
+            let newAccount = { id: Date.now(), billerCategory: selectedBillerCategory };
 
-            const selectedBiller = billerSelect.value;
-            let newAccount = {
-                id: Date.now(), // Unique ID for each account
-                biller: selectedBiller
-            };
-
-            if (selectedBiller === 'BDO') {
+            if (selectedBillerCategory === 'Accounts') {
+                const selectedAccountName = accountNameSelect.value;
+                newAccount = { 
+                    ...newAccount, 
+                    accountName: selectedAccountName === 'Other' ? otherAccountNameInput.value.trim() : selectedAccountName,
+                    username: usernameInput.value.trim(),
+                    password: passwordInput.value.trim() 
+                };
+            } else if (selectedBillerCategory === 'Billers') {
+                const selectedBillerSpecific = billerSpecificSelect.value;
                 newAccount = {
                     ...newAccount,
-                    account: 'BDO',
-                    accountHolder: bdoAccountHolderInput.value.trim(),
-                    accountNumber: bdoAccountNumberInput.value.trim(),
-                    amountToSettle: parseFloat(bdoAmountSettledInput.value).toFixed(2)
+                    billerSpecific: selectedBillerSpecific
                 };
-            } else if (selectedBiller === 'CREDIT CARD') {
-                newAccount = {
-                    ...newAccount,
-                    creditCardBank: ccBankSelect.value, // Save the selected credit card bank
-                    creditCardNumber: ccCreditCardNumberInput.value.trim(),
-                    accountHolder: ccAccountHolderInput.value.trim(),
-                    amountToSettle: parseFloat(ccAmountSettledInput.value).toFixed(2),
-                    billingStatementDate: ccBillingStatementDateInput.value.trim(),
-                    contactNumber: ccContactNumberInput.value.trim(),
-                    emailAddress: ccEmailAddressInput.value.trim(),
-                    remarks: ccRemarksInput.value.trim()
-                };
-            } else {
-                newAccount = {
-                    ...newAccount,
-                    accountHolder: genericAccountHolderInput.value.trim(),
-                    accountNumber: genericAccountNumberInput.value.trim(),
-                    telephoneNumber: genericTelephoneNumberInput.value.trim(),
-                    emailAddress: genericEmailAddressInput.value.trim(),
-                    amountToSettle: parseFloat(genericAmountSettledInput.value).toFixed(2),
-                    remarks: genericRemarksInput.value.trim()
-                };
+                if (selectedBillerSpecific === 'BDO') {
+                    newAccount = { ...newAccount, account: 'BDO', accountHolder: bdoAccountHolderInput.value.trim(), accountNumber: bdoAccountNumberInput.value.trim(), amountToSettle: parseFloat(bdoAmountSettledInput.value).toFixed(2) };
+                } else {
+                    newAccount = { ...newAccount, accountHolder: genericAccountHolderInput.value.trim(), accountNumber: genericAccountNumberInput.value.trim(), telephoneNumber: genericTelephoneNumberInput.value.trim(), emailAddress: genericEmailAddressInput.value.trim(), amountToSettle: parseFloat(genericAmountSettledInput.value).toFixed(2), remarks: genericRemarksInput.value.trim() };
+                }
+            } else if (selectedBillerCategory === 'CREDIT CARD') {
+                newAccount = { ...newAccount, creditCardBank: ccBankSelect.value, creditCardNumber: ccCreditCardNumberInput.value.trim(), accountHolder: ccAccountHolderInput.value.trim(), amountToSettle: parseFloat(ccAmountSettledInput.value).toFixed(2), billingStatementDate: ccBillingStatementDateInput.value.trim(), contactNumber: ccContactNumberInput.value.trim(), emailAddress: ccEmailAddressInput.value.trim(), remarks: ccRemarksInput.value.trim() };
             }
-
             accounts.push(newAccount);
             saveAccounts();
-            renderAccounts();
+            applyFiltersAndSort();
             showToast('Account added successfully!');
-            resetFormFields(); // Clear inputs and hide fields
+            resetFormFields();
         });
 
-        // Event listener for Clear All Data button
         clearAllBtn.addEventListener('click', () => {
             if (confirm('Are you sure you want to clear all saved account data? This action cannot be undone.')) {
                 accounts = [];
                 saveAccounts();
-                renderAccounts();
+                applyFiltersAndSort();
                 showToast('All data cleared successfully!');
                 resetFormFields();
+                searchBar.value = '';
             }
         });
 
-        // Event delegation for copy and delete buttons
-        accountsList.addEventListener('click', (event) => {
-            // Handle Copy Buttons
-            if (event.target.classList.contains('copy-btn')) {
-                const button = event.target;
-                const field = button.dataset.field;
+        searchBar.addEventListener('input', applyFiltersAndSort);
+        sortBtn.addEventListener('click', () => {
+            accounts.sort((a, b) => {
+                const nameA = (a.billerCategory === 'CREDIT CARD' ? a.creditCardBank || '' : 
+                               (a.billerCategory === 'Accounts' ? a.accountName || '' : a.billerSpecific || a.billerCategory)).toLowerCase();
+                const nameB = (b.billerCategory === 'CREDIT CARD' ? b.creditCardBank || '' : 
+                               (b.billerCategory === 'Accounts' ? b.accountName || '' : b.billerSpecific || b.billerCategory)).toLowerCase();
+                if (nameA < nameB) return -1;
+                if (nameA > nameB) return 1;
+                return 0;
+            });
+            applyFiltersAndSort();
+            showToast('Accounts sorted A-Z!');
+        });
+
+        accountsList.addEventListener('click', async (event) => {
+            const target = event.target;
+
+            if (target.classList.contains('copyable-info')) {
+                const spanElement = target;
+                let textToCopy = spanElement.textContent;
+
+                if (spanElement.dataset.password) {
+                    textToCopy = spanElement.dataset.password;
+                }
+
+                try {
+                    await navigator.clipboard.writeText(textToCopy);
+                    const originalText = spanElement.textContent;
+                    const originalStyles = {
+                        backgroundColor: spanElement.style.backgroundColor,
+                        color: spanElement.style.color,
+                        padding: spanElement.style.padding,
+                        borderRadius: spanElement.style.borderRadius,
+                        fontWeight: spanElement.style.fontWeight
+                    };
+
+                    spanElement.textContent = 'Copied!';
+                    spanElement.style.backgroundColor = 'var(--success-color)';
+                    spanElement.style.color = 'var(--toast-text)'; 
+                    spanElement.style.padding = '2px 5px'; 
+                    spanElement.style.borderRadius = '3px';
+                    spanElement.style.fontWeight = 'bold';
+
+                    setTimeout(() => {
+                        spanElement.textContent = originalText;
+                        spanElement.style.backgroundColor = originalStyles.backgroundColor;
+                        spanElement.style.color = originalStyles.color;
+                        spanElement.style.padding = originalStyles.padding;
+                        spanElement.style.borderRadius = originalStyles.borderRadius;
+                        spanElement.style.fontWeight = originalStyles.fontWeight;
+                    }, 1500);
+                } catch (err) {
+                    showToast('Failed to copy text: ' + err, 'error');
+                    console.error('Failed to copy text: ', err);
+                }
+                return;
+            }
+
+            if (target.classList.contains('copy-all-btn')) {
+                const button = target;
                 const accountItem = button.closest('.account-item');
                 const accountId = parseInt(accountItem.dataset.id);
                 const accountData = accounts.find(acc => acc.id === accountId);
 
                 if (accountData) {
-                    let textToCopy = accountData[field];
-                    // Special handling for amount to ensure format is correct
-                    if (field === 'amountToSettle') {
-                        textToCopy = parseFloat(textToCopy).toFixed(2);
-                    }
-                    copyToClipboard(textToCopy, button);
+                    let allInfo = '';
+                    if (accountData.billerCategory === 'Accounts') {
+                        allInfo = `Category: ${accountData.billerCategory}\n` +
+                                  `Account Name: ${accountData.accountName}\n` +
+                                  `Username: ${accountData.username}\n` +
+                                  `Password: ${accountData.password}`;
+                    } else if (accountData.billerCategory === 'Billers') {
+                        allInfo = `Category: ${accountData.billerCategory}\n` +
+                                  `Biller: ${accountData.billerSpecific}\n`;
+                        if (accountData.billerSpecific === 'BDO') {
+                            allInfo += `Account: ${accountData.account}\n` +
+                                       `Account Holder: ${accountData.accountHolder}\n` +
+                                       `Account Number: ${accountData.accountNumber}\n` +
+                                       `Amount: ₱ ${parseFloat(accountData.amountToSettle).toFixed(2)}`;
+                        } else {
+                            allInfo += `Account Holder: ${accountData.accountHolder}\n` +
+                                       `Account/Ref. Number: ${accountData.accountNumber}\n` +
+                                       `Contact Number: ${accountData.telephoneNumber || 'N/A'}\n` +
+                                       `Email Address: ${accountData.emailAddress || 'N/A'}\n` +
+                                       `Amount: ₱ ${parseFloat(accountData.amountToSettle).toFixed(2)}\n` +
+                                       `Remarks: ${accountData.remarks || 'N/A'}`;
+                        }
+                    } else if (accountData.billerCategory === 'CREDIT CARD') {
+                         allInfo = `Category: ${accountData.billerCategory}\n` +
+                                   `Bank: ${accountData.creditCardBank}\n` +
+                                   `Credit Card Number: ${accountData.creditCardNumber}\n` +
+                                   `Account Holder: ${accountData.accountHolder}\n` +
+                                   `Amount: ₱ ${parseFloat(accountData.amountToSettle).toFixed(2)}\n` +
+                                   `Billing Statement Date: ${accountData.billingStatementDate || 'N/A'}\n` +
+                                   `Contact Number: ${accountData.contactNumber || 'N/A'}\n` +
+                                   `Email Address: ${accountData.emailAddress || 'N/A'}\n` +
+                                   `Remarks: ${accountData.remarks || 'N/A'}`;
+                    } 
+                    copyToClipboard(allInfo, button);
                 }
+                return;
             }
 
-            // Handle Delete Buttons
-            if (event.target.classList.contains('delete-btn')) {
-                const button = event.target;
+            if (target.classList.contains('delete-btn')) {
+                const button = target;
                 const accountIdToDelete = parseInt(button.dataset.id);
-
                 if (confirm('Are you sure you want to delete this account?')) {
                     accounts = accounts.filter(acc => acc.id !== accountIdToDelete);
                     saveAccounts();
-                    renderAccounts();
+                    applyFiltersAndSort();
                     showToast('Account deleted successfully!');
                 }
+                return;
             }
         });
 
-        // Load accounts when the page loads
+        toggleDataBtn.addEventListener('click', () => {
+            savedDataSection.classList.toggle('expanded');
+            if (savedDataSection.classList.contains('expanded')) {
+                toggleDataBtn.textContent = 'Hide Saved Information';
+            } else {
+                toggleDataBtn.textContent = 'Show Saved Information';
+            }
+        });
+
+        downloadBtn.addEventListener('click', () => {
+            if (!currentUserData || !currentUserData.password) {
+                showToast('User profile not set up. Cannot download.', 'error');
+                return;
+            }
+            const downloadPassword = prompt('Enter your password to download data:');
+            if (downloadPassword === currentUserData.password) {
+                const dataStr = JSON.stringify(accounts, null, 2); 
+                const blob = new Blob([dataStr], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'personal_accounts.json';
+                document.body.appendChild(a); 
+                a.click();
+                document.body.removeChild(a); 
+                URL.revokeObjectURL(url); 
+                showToast('Data downloaded successfully!');
+            } else if (downloadPassword !== null) { // Check if prompt was not cancelled
+                showToast('Incorrect password. Download aborted.', 'error');
+            }
+        });
+
+        uploadInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (!file) {
+                return;
+            }
+
+            if (file.type !== 'application/json') {
+                showToast('Invalid file format. Please upload a JSON file.', 'error');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const uploadedData = JSON.parse(e.target.result);
+                    if (Array.isArray(uploadedData)) {
+                        // Simple merge: add new, don't overwrite existing by ID
+                        const existingIds = new Set(accounts.map(acc => acc.id));
+                        const newAccounts = uploadedData.filter(newAcc => {
+                            // Ensure uploaded accounts have an ID, if not, generate one
+                            if (newAcc.id === undefined || newAcc.id === null) {
+                                newAcc.id = Date.now() + Math.random(); // Simple unique ID
+                            }
+                            return !existingIds.has(newAcc.id);
+                        });
+                        
+                        accounts = [...accounts, ...newAccounts];
+                        saveAccounts();
+                        applyFiltersAndSort();
+                        showToast('Data uploaded and integrated successfully!');
+                    } else {
+                        showToast('Invalid JSON structure. Expected an array of accounts.', 'error');
+                    }
+                } catch (error) {
+                    showToast('Error parsing JSON file: ' + error.message, 'error');
+                    console.error('JSON parsing error:', error);
+                }
+            };
+            reader.onerror = () => {
+                showToast('Failed to read file.', 'error');
+            };
+            reader.readAsText(file);
+            uploadInput.value = ''; 
+        });
+
         document.addEventListener('DOMContentLoaded', () => {
-            loadAccounts();
-            hideAllFieldGroups(); // Ensure all groups are hidden on initial load
+            checkUserSetup(); 
+            // loadAccounts() is called after successful login/setup
         });
     </script>
 </body>
