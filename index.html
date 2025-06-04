@@ -1,0 +1,1141 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal Account Saver</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📄</text></svg>" />
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --white-bg: #FFFFFF;
+            --black-text: #000000;
+            --primary-blue: #007bff;
+            --primary-blue-dark: #0056b3;
+            --border-color: #dee2e6;
+            --success-color: #28a745;
+            --error-color: #dc3545;
+            --toast-bg: rgba(0, 0, 0, 0.7);
+            --toast-text: #FFFFFF;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--white-bg);
+            color: var(--black-text);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        .container {
+            background-color: var(--white-bg);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            max-width: 800px;
+            width: 100%;
+            margin-bottom: 30px;
+            border: 1px solid var(--border-color);
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--black-text);
+            margin-bottom: 30px;
+            font-weight: 700;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+            margin-bottom: 30px; /* Spacing between form and "Added Accounts" heading */
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--black-text);
+        }
+
+        input[type="text"],
+        input[type="number"],
+        input[type="date"],
+        input[type="email"],
+        input[type="password"], /* Added for password field */
+        select {
+            padding: 12px 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 1rem;
+            color: var(--black-text);
+            background-color: var(--white-bg);
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        input[type="text"]:focus,
+        input[type="number"]:focus,
+        input[type="date"]:focus,
+        input[type="email"]:focus,
+        input[type="password"]:focus, /* Added for password field */
+        select:focus {
+            border-color: var(--primary-blue);
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+            outline: none;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-blue);
+            color: var(--white-bg);
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            width: 100%;
+            font-weight: 600;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-blue-dark);
+            transform: translateY(-2px);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background-color: #6c757d;
+            color: var(--white-bg);
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin-top: 15px;
+            width: 100%;
+            font-weight: 600;
+        }
+
+        .btn-secondary:hover {
+            background-color: #5a6268;
+        }
+
+        .accounts-list {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .account-item {
+            background-color: var(--white-bg);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+            border: 1px solid var(--border-color);
+            position: relative;
+        }
+
+        .account-item p {
+            margin: 0 0 10px 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px; /* Gap between label and value if they wrap or are distinct items */
+        }
+
+        .account-item p:last-child {
+            margin-bottom: 0;
+        }
+
+        .account-item strong { /* Label part */
+            min-width: 120px; /* Adjust as needed for alignment */
+            display: inline-block;
+            margin-right: 5px; /* Space between label and value */
+        }
+
+        .copyable-info {
+            cursor: pointer;
+            padding: 2px 4px;
+            border-radius: 3px;
+            transition: background-color 0.2s ease, color 0.2s ease;
+            flex-grow: 1; /* Allows the info to take up space */
+            text-align: left; /* Default, but good to be explicit */
+        }
+
+        .copyable-info:hover {
+            background-color: rgba(0, 123, 255, 0.1); /* Subtle hover */
+        }
+        
+        /* Removed .copy-btn from this shared rule if it's no longer used for individual field copies */
+        .delete-btn, .copy-all-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            margin-left: 10px; /* Only for buttons that are indeed to the right */
+            padding: 5px 8px;
+            border-radius: 5px;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: var(--primary-blue);
+            border: 1px solid var(--primary-blue);
+            white-space: nowrap; 
+        }
+        
+        .copy-all-btn { /* Specific styling if needed, or rely on shared */
+             margin-left: 0; /* Copy all button can be full width or centered if needed */
+        }
+
+
+        .copy-all-btn:hover { /* Specific hover for copy-all if different */
+            background-color: rgba(0, 123, 255, 0.1);
+            transform: translateY(-1px);
+        }
+         .copy-all-btn:active {
+            transform: translateY(0);
+        }
+
+
+        .delete-btn {
+            background-color: var(--error-color);
+            color: var(--white-bg);
+            padding: 8px 15px;
+            font-size: 0.9rem;
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            border-radius: 8px;
+            transition: background-color 0.3s ease;
+            border: none; /* Ensure delete button border is explicitly none if shared rule had it */
+        }
+
+        .delete-btn:hover {
+            background-color: #c82333;
+        }
+
+        .toast-message {
+            visibility: hidden;
+            min-width: 250px;
+            background-color: var(--toast-bg);
+            color: var(--toast-text);
+            text-align: center;
+            border-radius: 8px;
+            padding: 16px;
+            position: fixed;
+            z-index: 1;
+            left: 50%;
+            bottom: 30px;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.3s, visibility 0.3s;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .toast-message.show {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .validation-error {
+            color: var(--error-color);
+            font-size: 0.85rem;
+            margin-top: 5px;
+        }
+
+        .search-sort-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px; 
+            align-items: center;
+            flex-wrap: wrap; 
+        }
+
+        .search-sort-container input[type="text"] {
+            flex-grow: 1;
+            margin-bottom: 0; 
+        }
+
+        .search-sort-container button {
+            padding: 10px 15px;
+            border-radius: 8px;
+            border: 1px solid var(--primary-blue);
+            background-color: var(--white-bg);
+            color: var(--primary-blue);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .search-sort-container button:hover {
+            background-color: var(--primary-blue);
+            color: var(--white-bg);
+        }
+
+        h2 { 
+            margin-top: 30px; 
+            margin-bottom: 20px; 
+            text-align: center;
+            color: var(--black-text);
+        }
+
+
+        /* Responsive adjustments */
+        @media (min-width: 600px) {
+            .form-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+            #billerSelectGroup,
+            #addAccountBtn,
+            #clearAllBtn,
+            #genericAmountSettledGroup,
+            #bdoAmountSettledGroup,
+            #ccAmountSettledGroup,
+            #accountNameGroup, /* New */
+            #usernameGroup, /* New */
+            #passwordGroup /* New */
+            {
+                grid-column: span 2;
+            }
+            #ccBankSelectGroup,
+            #otherAccountNameGroup /* New */ {
+                grid-column: span 1; 
+            }
+            .search-sort-container {
+                flex-wrap: nowrap; 
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 20px;
+            }
+            h1 {
+                font-size: 1.8rem;
+            }
+            .btn-primary, .btn-secondary {
+                padding: 10px 15px;
+                font-size: 1rem;
+            }
+            .account-item p { /* Ensure label and value stack nicely */
+                flex-direction: column;
+                align-items: flex-start; /* Align label and value to the start */
+                gap: 3px; /* Reduce gap when stacked */
+            }
+            .account-item strong {
+                min-width: unset; /* Allow label to take natural width */
+                margin-right: 0;
+                margin-bottom: 2px; /* Small space between label and value when stacked */
+            }
+            .copyable-info {
+                width: 100%; /* Make tappable area full width of its line */
+                text-align: left;
+            }
+            /* .copy-btn was here, now irrelevant for individual fields */
+            .search-sort-container {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .search-sort-container input,
+            .search-sort-container button {
+                width: 100%;
+                margin-top: 5px; 
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Account Settlement Tracker</h1>
+
+        <div class="search-sort-container">
+            <input type="text" id="searchBar" placeholder="Search accounts...">
+            <button id="sortBtn">Sort A-Z</button>
+        </div>
+
+        <div class="form-grid">
+            <div class="form-group" id="billerSelectGroup">
+                <label for="billerSelect">Select Biller:</label>
+                <select id="billerSelect">
+                    <option value="">-- Please Select --</option>
+                    <option value="Accounts">Accounts</option>
+ <option value="CREDIT CARD">Credit Cards</option>
+ <option value="PLDT">PLDT</option>
+
+                    <option value="SHOPEE">Shopee</option>
+                    <option value="GCASH">Gcash</option>
+                    <option value="SEABANK PH">Seabank Philippines</option>
+                    <option value="PAYMAYA">Paymaya</option>
+                    <option value="MOVEIT">Move it</option>
+                    <option value="LAZADA PH">Lazada Philippines</option>
+                    <option value="BDO">BDO Unibank</option>
+                   
+                </select>
+                <div class="validation-error" id="billerSelect-error"></div>
+            </div>
+
+            <div class="form-group" id="accountNameGroup" style="display: none;">
+                <label for="accountNameSelect">Account Name:</label>
+                <select id="accountNameSelect">
+                    <option value="">-- Select Account Type --</option>
+                    <option value="PAGIBIG PH">PAGIBIG PH</option>
+                    <option value="SSS">SSS</option>
+                    <option value="Philhealth">Philhealth</option>
+                    <option value="Google">Google</option>
+                    <option value="Yahoo">Yahoo</option>
+                    <option value="Instagram">Instagram</option>
+                    <option value="Facebook">Facebook</option>
+                    <option value="YouTube">YouTube</option>
+                    <option value="LinkedIn">LinkedIn</option>
+                    <option value="Other">Other</option>
+                   <option value="Other">Other</option>
+                   <option value="Other">Other</option>
+                </select>
+                <div class="validation-error" id="accountNameSelect-error"></div>
+            </div>
+
+            <div class="form-group" id="otherAccountNameGroup" style="display: none;">
+                <label for="otherAccountName">Other Account Name:</label>
+                <input type="text" id="otherAccountName" placeholder="e.g., Netflix">
+                <div class="validation-error" id="otherAccountName-error"></div>
+            </div>
+
+            <div class="form-group" id="usernameGroup" style="display: none;">
+                <label for="usernameInput">Username:</label>
+                <input type="text" id="usernameInput" placeholder="Enter username">
+                <div class="validation-error" id="username-error"></div>
+            </div>
+
+            <div class="form-group" id="passwordGroup" style="display: none;">
+                <label for="passwordInput">Password:</label>
+                <input type="password" id="passwordInput" placeholder="Enter password">
+                <div class="validation-error" id="password-error"></div>
+            </div>
+
+          <div class="form-group" id="ccBankSelectGroup" style="display: none;">
+    <label for="ccBankSelect">Select Credit Card Bank:</label>
+    <select id="ccBankSelect">
+        <option value="">-- Select Bank --</option>
+        <option value="BDO">BDO</option>
+        <option value="BPI">BPI</option>
+        <option value="UNIONBANK">Unionbank</option>
+        <option value="METROBANK">Metrobank</option>
+        <option value="RCBC">RCBC</option>
+        <option value="PNB">PNB</option>
+        <option value="SECURITY BANK">Security Bank</option>
+        <option value="CHINABANK">Chinabank</option>
+        <option value="EASTWEST BANK">Eastwest Bank</option>
+        <option value="HSBC">HSBC</option>
+        <option value="CITIBANK">Citibank</option>
+        <option value="AUB">AUB</option>
+        <option value="LANDBANK">Landbank</option>
+        <option value="MAYBANK">Maybank</option>
+        <option value="CEBUANA LHUILLIER RURAL BANK">Cebuana Lhuillier Rural Bank</option>
+        <option value="SEABANK PH">Seabank Philippines</option>
+        <option value="OTHER BANK">Other banks</option>
+    </select>
+    <div class="validation-error" id="ccBankSelect-error"></div>
+</div>
+
+
+            <div class="form-group" id="genericAccountHolderGroup" style="display: none;">
+                <label for="genericAccountHolder">Account Holder:</label>
+                <input type="text" id="genericAccountHolder" placeholder="e.g., Juan Dela Cruz">
+                <div class="validation-error" id="genericAccountHolder-error"></div>
+            </div>
+            <div class="form-group" id="genericAccountNumberGroup" style="display: none;">
+                <label for="genericAccountNumber">Account/Reference Number:</label>
+                <input type="text" id="genericAccountNumber" placeholder="e.g., 1234567890">
+                <div class="validation-error" id="genericAccountNumber-error"></div>
+            </div>
+            <div class="form-group" id="genericTelephoneNumberGroup" style="display: none;">
+                <label for="genericTelephoneNumber">Contact Number:</label>
+                <input type="text" id="genericTelephoneNumber" placeholder="e.g., 09171234567">
+            </div>
+            <div class="form-group" id="genericEmailAddressGroup" style="display: none;">
+                <label for="genericEmailAddress">Email Address:</label>
+                <input type="email" id="genericEmailAddress" placeholder="e.g., your@example.com">
+            </div>
+            <div class="form-group" id="genericAmountSettledGroup" style="display: none;">
+                <label for="genericAmountSettled">Amount needs to be settled:</label>
+                <input type="number" id="genericAmountSettled" placeholder="e.g., 1500.50" step="0.01">
+                <div class="validation-error" id="genericAmountSettled-error"></div>
+            </div>
+            <div class="form-group" id="genericRemarksGroup" style="display: none;">
+                <label for="genericRemarks">Remarks/Notes (Optional):</label>
+                <input type="text" id="genericRemarks" placeholder="Any specific notes for this payment">
+            </div>
+
+            <div class="form-group" id="bdoAccountGroup" style="display: none;">
+                <label for="bdoAccount">Account:</label>
+                <input type="text" id="bdoAccount" value="BDO" readonly>
+            </div>
+            <div class="form-group" id="bdoAccountHolderGroup" style="display: none;">
+                <label for="bdoAccountHolder">Account Holder:</label>
+                <input type="text" id="bdoAccountHolder" placeholder="e.g., Juan Dela Cruz">
+                <div class="validation-error" id="bdoAccountHolder-error"></div>
+            </div>
+            <div class="form-group" id="bdoAccountNumberGroup" style="display: none;">
+                <label for="bdoAccountNumber">Account Number:</label>
+                <input type="text" id="bdoAccountNumber" placeholder="e.g., 001234567890">
+                <div class="validation-error" id="bdoAccountNumber-error"></div>
+            </div>
+            <div class="form-group" id="bdoAmountSettledGroup" style="display: none;">
+                <label for="bdoAmountSettled">Amount needs to be settled:</label>
+                <input type="number" id="bdoAmountSettled" placeholder="e.g., 1500.50" step="0.01">
+                <div class="validation-error" id="bdoAmountSettled-error"></div>
+            </div>
+
+            <div class="form-group" id="ccCreditCardNumberGroup" style="display: none;">
+                <label for="ccCreditCardNumber">Credit Card Number:</label>
+                <input type="text" id="ccCreditCardNumber" placeholder="e.g., XXXX XXXX XXXX XXXX">
+                <div class="validation-error" id="ccCreditCardNumber-error"></div>
+            </div>
+            <div class="form-group" id="ccAccountHolderGroup" style="display: none;">
+                <label for="ccAccountHolder">Account Holder:</label>
+                <input type="text" id="ccAccountHolder" placeholder="e.g., Juan Dela Cruz">
+                <div class="validation-error" id="ccAccountHolder-error"></div>
+            </div>
+            <div class="form-group" id="ccAmountSettledGroup" style="display: none;">
+                <label for="ccAmountSettled">Amount needs to be settled:</label>
+                <input type="number" id="ccAmountSettled" placeholder="e.g., 1500.50" step="0.01">
+                <div class="validation-error" id="ccAmountSettled-error"></div>
+            </div>
+            <div class="form-group" id="ccBillingStatementDateGroup" style="display: none;">
+                <label for="ccBillingStatementDate">Billing Statement Date:</label>
+                <input type="date" id="ccBillingStatementDate">
+                <div class="validation-error" id="ccBillingStatementDate-error"></div>
+            </div>
+            <div class="form-group" id="ccContactNumberGroup" style="display: none;">
+                <label for="ccContactNumber">Contact Number:</label>
+                <input type="text" id="ccContactNumber" placeholder="e.g., 09171234567">
+            </div>
+            <div class="form-group" id="ccEmailAddressGroup" style="display: none;">
+                <label for="ccEmailAddress">Email Address:</label>
+                <input type="email" id="ccEmailAddress" placeholder="e.g., your@example.com">
+            </div>
+            <div class="form-group" id="ccRemarksGroup" style="display: none;">
+                <label for="ccRemarks">Remarks/Notes (Optional):</label>
+                <input type="text" id="ccRemarks" placeholder="Any specific notes for this payment">
+            </div>
+
+            <button class="btn-primary" id="addAccountBtn">Add Account</button>
+            <button class="btn-secondary" id="clearAllBtn">Clear All Data</button>
+        </div>
+
+        <h2>Added Accounts</h2>
+        <div class="accounts-list" id="accountsList">
+        </div>
+    </div>
+
+    <div id="toastMessage" class="toast-message"></div>
+
+    <script>
+        const billerSelect = document.getElementById('billerSelect');
+        const ccBankSelect = document.getElementById('ccBankSelect');
+
+        // New Account fields
+        const accountNameGroup = document.getElementById('accountNameGroup');
+        const accountNameSelect = document.getElementById('accountNameSelect');
+        const otherAccountNameGroup = document.getElementById('otherAccountNameGroup');
+        const otherAccountNameInput = document.getElementById('otherAccountName');
+        const usernameGroup = document.getElementById('usernameGroup');
+        const usernameInput = document.getElementById('usernameInput');
+        const passwordGroup = document.getElementById('passwordGroup');
+        const passwordInput = document.getElementById('passwordInput');
+
+        const genericAccountHolderGroup = document.getElementById('genericAccountHolderGroup');
+        const genericAccountHolderInput = document.getElementById('genericAccountHolder');
+        const genericAccountNumberGroup = document.getElementById('genericAccountNumberGroup');
+        const genericAccountNumberInput = document.getElementById('genericAccountNumber');
+        const genericTelephoneNumberGroup = document.getElementById('genericTelephoneNumberGroup');
+        const genericTelephoneNumberInput = document.getElementById('genericTelephoneNumber');
+        const genericEmailAddressGroup = document.getElementById('genericEmailAddressGroup');
+        const genericEmailAddressInput = document.getElementById('genericEmailAddress');
+        const genericAmountSettledGroup = document.getElementById('genericAmountSettledGroup');
+        const genericAmountSettledInput = document.getElementById('genericAmountSettled');
+        const genericRemarksGroup = document.getElementById('genericRemarksGroup');
+        const genericRemarksInput = document.getElementById('genericRemarks');
+
+        const bdoAccountGroup = document.getElementById('bdoAccountGroup');
+        const bdoAccountHolderGroup = document.getElementById('bdoAccountHolderGroup');
+        const bdoAccountHolderInput = document.getElementById('bdoAccountHolder');
+        const bdoAccountNumberGroup = document.getElementById('bdoAccountNumberGroup');
+        const bdoAccountNumberInput = document.getElementById('bdoAccountNumber');
+        const bdoAmountSettledGroup = document.getElementById('bdoAmountSettledGroup');
+        const bdoAmountSettledInput = document.getElementById('bdoAmountSettled');
+
+        const ccBankSelectGroup = document.getElementById('ccBankSelectGroup');
+        const ccCreditCardNumberGroup = document.getElementById('ccCreditCardNumberGroup');
+        const ccCreditCardNumberInput = document.getElementById('ccCreditCardNumber');
+        const ccAccountHolderGroup = document.getElementById('ccAccountHolderGroup');
+        const ccAccountHolderInput = document.getElementById('ccAccountHolder');
+        const ccAmountSettledGroup = document.getElementById('ccAmountSettledGroup');
+        const ccAmountSettledInput = document.getElementById('ccAmountSettled');
+        const ccBillingStatementDateGroup = document.getElementById('ccBillingStatementDateGroup');
+        const ccBillingStatementDateInput = document.getElementById('ccBillingStatementDate');
+        const ccContactNumberGroup = document.getElementById('ccContactNumberGroup');
+        const ccContactNumberInput = document.getElementById('ccContactNumber');
+        const ccEmailAddressGroup = document.getElementById('ccEmailAddressGroup'); 
+        const ccEmailAddressInput = document.getElementById('ccEmailAddress');
+        const ccRemarksGroup = document.getElementById('ccRemarksGroup');
+        const ccRemarksInput = document.getElementById('ccRemarks');
+
+        const addAccountBtn = document.getElementById('addAccountBtn');
+        const clearAllBtn = document.getElementById('clearAllBtn');
+        const accountsList = document.getElementById('accountsList');
+        const toastMessage = document.getElementById('toastMessage');
+        const searchBar = document.getElementById('searchBar');
+        const sortBtn = document.getElementById('sortBtn');
+
+        const billerSelectError = document.getElementById('billerSelect-error');
+        const ccBankSelectError = document.getElementById('ccBankSelect-error');
+        const genericAccountHolderError = document.getElementById('genericAccountHolder-error');
+        const genericAccountNumberError = document.getElementById('genericAccountNumber-error');
+        const genericAmountSettledError = document.getElementById('genericAmountSettled-error');
+        const bdoAccountHolderError = document.getElementById('bdoAccountHolder-error');
+        const bdoAccountNumberError = document.getElementById('bdoAccountNumber-error');
+        const bdoAmountSettledError = document.getElementById('bdoAmountSettled-error');
+        const ccCreditCardNumberError = document.getElementById('ccCreditCardNumber-error');
+        const ccAccountHolderError = document.getElementById('ccAccountHolder-error');
+        const ccAmountSettledError = document.getElementById('ccAmountSettled-error');
+        const ccBillingStatementDateError = document.getElementById('ccBillingStatementDate-error');
+        // New Account Error elements
+        const accountNameSelectError = document.getElementById('accountNameSelect-error');
+        const otherAccountNameError = document.getElementById('otherAccountName-error');
+        const usernameError = document.getElementById('username-error');
+        const passwordError = document.getElementById('password-error');
+
+
+        let accounts = [];
+        let displayedAccounts = [];
+
+        function showToast(message, type = 'success') {
+            toastMessage.textContent = message;
+            toastMessage.className = 'toast-message show';
+            if (type === 'error') {
+                toastMessage.style.backgroundColor = 'var(--error-color)';
+            } else {
+                toastMessage.style.backgroundColor = 'var(--toast-bg)';
+            }
+            setTimeout(() => {
+                toastMessage.className = 'toast-message';
+                toastMessage.style.backgroundColor = 'var(--toast-bg)';
+            }, 3000);
+        }
+
+        // This function is still used for the "Copy All Info" button
+        async function copyToClipboard(text, element) {
+            try {
+                await navigator.clipboard.writeText(text);
+                const originalText = element.innerHTML;
+                element.innerHTML = 'Copied! <span style="font-size:1.2em;">✔️</span>';
+                element.style.borderColor = 'var(--success-color)';
+                element.style.color = 'var(--success-color)';
+                setTimeout(() => {
+                    element.innerHTML = originalText;
+                    element.style.borderColor = 'var(--primary-blue)';
+                    element.style.color = 'var(--primary-blue)';
+                }, 1500);
+            } catch (err) {
+                showToast('Failed to copy: ' + err, 'error');
+                console.error('Failed to copy: ', err);
+            }
+        }
+
+        function clearAllErrors() {
+            document.querySelectorAll('.validation-error').forEach(errorElement => {
+                errorElement.textContent = '';
+            });
+        }
+
+        function validateInputs() {
+            clearAllErrors();
+            let isValid = true;
+            const selectedBiller = billerSelect.value;
+
+            if (selectedBiller === '') {
+                billerSelectError.textContent = 'Please select a biller.';
+                isValid = false;
+            }
+
+            if (selectedBiller === 'Accounts') {
+                if (accountNameSelect.value === '') {
+                    accountNameSelectError.textContent = 'Please select an account type.';
+                    isValid = false;
+                } else if (accountNameSelect.value === 'Other' && otherAccountNameInput.value.trim() === '') {
+                    otherAccountNameError.textContent = 'Please enter the other account name.';
+                    isValid = false;
+                }
+                if (usernameInput.value.trim() === '') {
+                    usernameError.textContent = 'Username is required.';
+                    isValid = false;
+                }
+                if (passwordInput.value.trim() === '') {
+                    passwordError.textContent = 'Password is required.';
+                    isValid = false;
+                }
+            } else if (selectedBiller === 'BDO') {
+                if (bdoAccountHolderInput.value.trim() === '') {
+                    bdoAccountHolderError.textContent = 'Account holder name is required.';
+                    isValid = false;
+                }
+                if (bdoAccountNumberInput.value.trim() === '') {
+                    bdoAccountNumberError.textContent = 'Account number is required.';
+                    isValid = false;
+                }
+                if (bdoAmountSettledInput.value.trim() === '' || isNaN(parseFloat(bdoAmountSettledInput.value))) {
+                    bdoAmountSettledError.textContent = 'Valid amount is required.';
+                    isValid = false;
+                } else if (parseFloat(bdoAmountSettledInput.value) <= 0) {
+                    bdoAmountSettledError.textContent = 'Amount must be greater than zero.';
+                    isValid = false;
+                }
+            } else if (selectedBiller === 'CREDIT CARD') {
+                if (ccBankSelect.value === '') {
+                    ccBankSelectError.textContent = 'Please select a credit card issuing bank.';
+                    isValid = false;
+                }
+                if (ccCreditCardNumberInput.value.trim() === '') {
+                    ccCreditCardNumberError.textContent = 'Credit card number is required.';
+                    isValid = false;
+                }
+                if (ccAccountHolderInput.value.trim() === '') {
+                    ccAccountHolderError.textContent = 'Account holder name is required.';
+                    isValid = false;
+                }
+                if (ccAmountSettledInput.value.trim() === '' || isNaN(parseFloat(ccAmountSettledInput.value))) {
+                    ccAmountSettledError.textContent = 'Valid amount is required.';
+                    isValid = false;
+                } else if (parseFloat(ccAmountSettledInput.value) <= 0) {
+                    ccAmountSettledError.textContent = 'Amount must be greater than zero.';
+                    isValid = false;
+                }
+                if (ccBillingStatementDateInput.value.trim() === '') {
+                    ccBillingStatementDateError.textContent = 'Billing statement date is required.';
+                    isValid = false;
+                }
+            } else if (selectedBiller !== '') { // Generic billers
+                if (genericAccountHolderInput.value.trim() === '') {
+                    genericAccountHolderError.textContent = 'Account holder name is required.';
+                    isValid = false;
+                }
+                if (genericAccountNumberInput.value.trim() === '') {
+                    genericAccountNumberError.textContent = 'Account/Reference number is required.';
+                    isValid = false;
+                }
+                if (genericAmountSettledInput.value.trim() === '' || isNaN(parseFloat(genericAmountSettledInput.value))) {
+                    genericAmountSettledError.textContent = 'Valid amount is required.';
+                    isValid = false;
+                } else if (parseFloat(genericAmountSettledInput.value) <= 0) {
+                    genericAmountSettledError.textContent = 'Amount must be greater than zero.';
+                    isValid = false;
+                }
+            }
+            return isValid;
+        }
+
+        function renderAccounts(accountsToRender = accounts) {
+            accountsList.innerHTML = '';
+            displayedAccounts = [...accountsToRender];
+
+            if (displayedAccounts.length === 0) {
+                accountsList.innerHTML = '<p style="text-align: center; color: #6c757d;">No accounts found.</p>';
+                return;
+            }
+
+            displayedAccounts.forEach((acc) => {
+                const accountItem = document.createElement('div');
+                accountItem.classList.add('account-item');
+                accountItem.setAttribute('data-id', acc.id);
+
+                // Helper to create a paragraph with a label and copyable info span
+                function createInfoParagraph(label, value, isPassword = false) {
+                    const displayValue = value || 'N/A';
+                    if (isPassword) {
+                        return `<p><strong>${label}:</strong> <span class="copyable-info" data-password="${value}">**********</span></p>`;
+                    }
+                    return `<p><strong>${label}:</strong> <span class="copyable-info">${displayValue}</span></p>`;
+                }
+                
+                let detailsHtml = createInfoParagraph('Biller', acc.biller);
+                detailsHtml += `<button class="delete-btn" data-id="${acc.id}">Delete</button>`; // Delete button remains
+
+
+                if (acc.biller === 'Accounts') {
+                    detailsHtml += createInfoParagraph('Account Name', acc.accountName);
+                    detailsHtml += createInfoParagraph('Username', acc.username);
+                    detailsHtml += createInfoParagraph('Password', acc.password, true); // Mark as password
+                } else if (acc.biller === 'BDO') {
+                    detailsHtml += createInfoParagraph('Account', acc.account);
+                    detailsHtml += createInfoParagraph('Account Holder', acc.accountHolder);
+                    detailsHtml += createInfoParagraph('Account Number', acc.accountNumber);
+                    detailsHtml += createInfoParagraph('Amount', `₱ ${parseFloat(acc.amountToSettle).toFixed(2)}`);
+                } else if (acc.biller === 'CREDIT CARD') {
+                    detailsHtml += createInfoParagraph('Bank', acc.creditCardBank);
+                    detailsHtml += createInfoParagraph('Credit Card Number', acc.creditCardNumber);
+                    detailsHtml += createInfoParagraph('Account Holder', acc.accountHolder);
+                    detailsHtml += createInfoParagraph('Amount', `₱ ${parseFloat(acc.amountToSettle).toFixed(2)}`);
+                    detailsHtml += createInfoParagraph('Billing Statement Date', acc.billingStatementDate);
+                    detailsHtml += createInfoParagraph('Contact Number', acc.contactNumber);
+                    detailsHtml += createInfoParagraph('Email Address', acc.emailAddress);
+                    detailsHtml += createInfoParagraph('Remarks', acc.remarks);
+                } else { // Generic billers
+                    detailsHtml += createInfoParagraph('Account Holder', acc.accountHolder);
+                    detailsHtml += createInfoParagraph('Account/Ref. Number', acc.accountNumber);
+                    detailsHtml += createInfoParagraph('Contact Number', acc.telephoneNumber);
+                    detailsHtml += createInfoParagraph('Email Address', acc.emailAddress);
+                    detailsHtml += createInfoParagraph('Amount', `₱ ${parseFloat(acc.amountToSettle).toFixed(2)}`);
+                    detailsHtml += createInfoParagraph('Remarks', acc.remarks);
+                }
+                detailsHtml += `<button class="copy-all-btn" data-id="${acc.id}">Copy All Info</button>`;
+                accountItem.innerHTML = detailsHtml;
+                accountsList.appendChild(accountItem);
+            });
+        }
+
+        function saveAccounts() {
+            localStorage.setItem('accounts', JSON.stringify(accounts));
+        }
+
+        function loadAccounts() {
+            const storedAccounts = localStorage.getItem('accounts');
+            if (storedAccounts) {
+                accounts = JSON.parse(storedAccounts);
+            }
+            applyFiltersAndSort();
+        }
+
+        function resetFormFields() {
+            billerSelect.value = '';
+            ccBankSelect.value = '';
+            accountNameSelect.value = ''; // New
+            otherAccountNameInput.value = ''; // New
+            usernameInput.value = ''; // New
+            passwordInput.value = ''; // New
+            genericAccountHolderInput.value = '';
+            genericAccountNumberInput.value = '';
+            genericTelephoneNumberInput.value = '';
+            genericEmailAddressInput.value = '';
+            genericAmountSettledInput.value = '';
+            genericRemarksInput.value = '';
+            bdoAccountHolderInput.value = '';
+            bdoAccountNumberInput.value = '';
+            bdoAmountSettledInput.value = '';
+            ccCreditCardNumberInput.value = '';
+            ccAccountHolderInput.value = '';
+            ccAmountSettledInput.value = '';
+            ccBillingStatementDateInput.value = '';
+            ccContactNumberInput.value = '';
+            ccEmailAddressInput.value = '';
+            ccRemarksInput.value = '';
+            clearAllErrors();
+            hideAllFieldGroups();
+        }
+
+        function hideAllFieldGroups() {
+            // New Account fields
+            accountNameGroup.style.display = 'none';
+            otherAccountNameGroup.style.display = 'none';
+            usernameGroup.style.display = 'none';
+            passwordGroup.style.display = 'none';
+
+            genericAccountHolderGroup.style.display = 'none';
+            genericAccountNumberGroup.style.display = 'none';
+            genericTelephoneNumberGroup.style.display = 'none';
+            genericEmailAddressGroup.style.display = 'none';
+            genericAmountSettledGroup.style.display = 'none';
+            genericRemarksGroup.style.display = 'none';
+            bdoAccountGroup.style.display = 'none';
+            bdoAccountHolderGroup.style.display = 'none';
+            bdoAccountNumberGroup.style.display = 'none';
+            bdoAmountSettledGroup.style.display = 'none';
+            ccBankSelectGroup.style.display = 'none';
+            ccCreditCardNumberGroup.style.display = 'none';
+            ccAccountHolderGroup.style.display = 'none';
+            ccAmountSettledGroup.style.display = 'none';
+            ccBillingStatementDateGroup.style.display = 'none';
+            ccContactNumberGroup.style.display = 'none';
+            ccEmailAddressGroup.style.display = 'none';
+            ccRemarksGroup.style.display = 'none';
+        }
+
+        function applyFiltersAndSort() {
+            let filtered = [...accounts];
+            const searchTerm = searchBar.value.toLowerCase();
+
+            if (searchTerm) {
+                filtered = filtered.filter(acc => {
+                    for (const key in acc) {
+                        // Check if the property value is a string and includes the search term
+                        if (typeof acc[key] === 'string' && acc[key].toLowerCase().includes(searchTerm)) {
+                            return true;
+                        }
+                    }
+                    // Also search amount if it's a number
+                    if (acc.amountToSettle && acc.amountToSettle.toString().includes(searchTerm)) return true;
+                    return false;
+                });
+            }
+
+            filtered.sort((a, b) => {
+                const nameA = (a.biller === 'CREDIT CARD' ? a.creditCardBank || '' : 
+                               (a.biller === 'Accounts' ? a.accountName || '' : a.biller)).toLowerCase();
+                const nameB = (b.biller === 'CREDIT CARD' ? b.creditCardBank || '' : 
+                               (b.biller === 'Accounts' ? b.accountName || '' : b.biller)).toLowerCase();
+                if (nameA < nameB) return -1;
+                if (nameA > nameB) return 1;
+                return 0;
+            });
+
+            renderAccounts(filtered);
+        }
+
+        billerSelect.addEventListener('change', () => {
+            hideAllFieldGroups();
+            clearAllErrors();
+            ccBankSelect.value = ''; // Reset for credit card bank
+            accountNameSelect.value = ''; // Reset for account name
+            otherAccountNameInput.value = ''; // Reset other account name
+            
+            const selectedBiller = billerSelect.value;
+            if (selectedBiller === 'Accounts') {
+                accountNameGroup.style.display = 'flex';
+                usernameGroup.style.display = 'flex';
+                passwordGroup.style.display = 'flex';
+            } else if (selectedBiller === 'BDO') {
+                bdoAccountGroup.style.display = 'flex';
+                bdoAccountHolderGroup.style.display = 'flex';
+                bdoAccountNumberGroup.style.display = 'flex';
+                bdoAmountSettledGroup.style.display = 'flex';
+            } else if (selectedBiller === 'CREDIT CARD') {
+                ccBankSelectGroup.style.display = 'flex';
+            } else if (selectedBiller !== '') { // Generic billers
+                genericAccountHolderGroup.style.display = 'flex';
+                genericAccountNumberGroup.style.display = 'flex';
+                genericTelephoneNumberGroup.style.display = 'flex';
+                genericEmailAddressGroup.style.display = 'flex';
+                genericAmountSettledGroup.style.display = 'flex';
+                genericRemarksGroup.style.display = 'flex';
+            }
+        });
+
+        accountNameSelect.addEventListener('change', () => {
+            if (accountNameSelect.value === 'Other') {
+                otherAccountNameGroup.style.display = 'flex';
+            } else {
+                otherAccountNameGroup.style.display = 'none';
+                otherAccountNameInput.value = '';
+            }
+        });
+
+        ccBankSelect.addEventListener('change', () => {
+            ccCreditCardNumberGroup.style.display = 'none';
+            ccAccountHolderGroup.style.display = 'none';
+            ccAmountSettledGroup.style.display = 'none';
+            ccBillingStatementDateGroup.style.display = 'none';
+            ccContactNumberGroup.style.display = 'none';
+            ccEmailAddressGroup.style.display = 'none';
+            ccRemarksGroup.style.display = 'none';
+            clearAllErrors();
+            if (ccBankSelect.value !== '') {
+                ccCreditCardNumberGroup.style.display = 'flex';
+                ccAccountHolderGroup.style.display = 'flex';
+                ccAmountSettledGroup.style.display = 'flex';
+                ccBillingStatementDateGroup.style.display = 'flex';
+                ccContactNumberGroup.style.display = 'flex';
+                ccEmailAddressGroup.style.display = 'flex';
+                ccRemarksGroup.style.display = 'flex';
+            }
+        });
+
+        addAccountBtn.addEventListener('click', () => {
+            if (!validateInputs()) {
+                showToast('Please fill in all required fields correctly.', 'error');
+                return;
+            }
+            const selectedBiller = billerSelect.value;
+            let newAccount = { id: Date.now(), biller: selectedBiller };
+
+            if (selectedBiller === 'Accounts') {
+                const selectedAccountName = accountNameSelect.value;
+                newAccount = { 
+                    ...newAccount, 
+                    accountName: selectedAccountName === 'Other' ? otherAccountNameInput.value.trim() : selectedAccountName,
+                    username: usernameInput.value.trim(),
+                    password: passwordInput.value.trim() // Storing password directly. Consider encryption for sensitive data.
+                };
+            } else if (selectedBiller === 'BDO') {
+                newAccount = { ...newAccount, account: 'BDO', accountHolder: bdoAccountHolderInput.value.trim(), accountNumber: bdoAccountNumberInput.value.trim(), amountToSettle: parseFloat(bdoAmountSettledInput.value).toFixed(2) };
+            } else if (selectedBiller === 'CREDIT CARD') {
+                newAccount = { ...newAccount, creditCardBank: ccBankSelect.value, creditCardNumber: ccCreditCardNumberInput.value.trim(), accountHolder: ccAccountHolderInput.value.trim(), amountToSettle: parseFloat(ccAmountSettledInput.value).toFixed(2), billingStatementDate: ccBillingStatementDateInput.value.trim(), contactNumber: ccContactNumberInput.value.trim(), emailAddress: ccEmailAddressInput.value.trim(), remarks: ccRemarksInput.value.trim() };
+            } else {
+                newAccount = { ...newAccount, accountHolder: genericAccountHolderInput.value.trim(), accountNumber: genericAccountNumberInput.value.trim(), telephoneNumber: genericTelephoneNumberInput.value.trim(), emailAddress: genericEmailAddressInput.value.trim(), amountToSettle: parseFloat(genericAmountSettledInput.value).toFixed(2), remarks: genericRemarksInput.value.trim() };
+            }
+            accounts.push(newAccount);
+            saveAccounts();
+            applyFiltersAndSort();
+            showToast('Account added successfully!');
+            resetFormFields();
+        });
+
+        clearAllBtn.addEventListener('click', () => {
+            if (confirm('Are you sure you want to clear all saved account data? This action cannot be undone.')) {
+                accounts = [];
+                saveAccounts();
+                applyFiltersAndSort();
+                showToast('All data cleared successfully!');
+                resetFormFields();
+                searchBar.value = '';
+            }
+        });
+
+        searchBar.addEventListener('input', applyFiltersAndSort);
+        sortBtn.addEventListener('click', () => {
+            accounts.sort((a, b) => {
+                const nameA = (a.biller === 'CREDIT CARD' ? a.creditCardBank || '' : 
+                               (a.biller === 'Accounts' ? a.accountName || '' : a.biller)).toLowerCase();
+                const nameB = (b.biller === 'CREDIT CARD' ? b.creditCardBank || '' : 
+                               (b.biller === 'Accounts' ? b.accountName || '' : b.biller)).toLowerCase();
+                if (nameA < nameB) return -1;
+                if (nameA > nameB) return 1;
+                return 0;
+            });
+            applyFiltersAndSort();
+            showToast('Accounts sorted A-Z!');
+        });
+
+        accountsList.addEventListener('click', async (event) => {
+            const target = event.target;
+
+            // Handle Tapping Information to Copy
+            if (target.classList.contains('copyable-info')) {
+                const spanElement = target;
+                let textToCopy = spanElement.textContent;
+
+                // Special handling for password field: copy the actual password
+                if (spanElement.dataset.password) {
+                    textToCopy = spanElement.dataset.password;
+                }
+
+                try {
+                    await navigator.clipboard.writeText(textToCopy);
+                    const originalText = spanElement.textContent;
+                    const originalStyles = {
+                        backgroundColor: spanElement.style.backgroundColor,
+                        color: spanElement.style.color,
+                        padding: spanElement.style.padding,
+                        borderRadius: spanElement.style.borderRadius,
+                        fontWeight: spanElement.style.fontWeight
+                    };
+
+                    spanElement.textContent = 'Copied!';
+                    spanElement.style.backgroundColor = 'var(--success-color)';
+                    spanElement.style.color = 'var(--toast-text)'; // White text on green bg
+                    spanElement.style.padding = '2px 5px'; 
+                    spanElement.style.borderRadius = '3px';
+                    spanElement.style.fontWeight = 'bold';
+
+                    setTimeout(() => {
+                        spanElement.textContent = originalText;
+                        spanElement.style.backgroundColor = originalStyles.backgroundColor;
+                        spanElement.style.color = originalStyles.color;
+                        spanElement.style.padding = originalStyles.padding;
+                        spanElement.style.borderRadius = originalStyles.borderRadius;
+                        spanElement.style.fontWeight = originalStyles.fontWeight;
+                    }, 1500);
+                } catch (err) {
+                    showToast('Failed to copy text: ' + err, 'error');
+                    console.error('Failed to copy text: ', err);
+                }
+                return; // Stop further processing for this click
+            }
+
+            // Handle Copy All Button
+            if (target.classList.contains('copy-all-btn')) {
+                const button = target;
+                const accountItem = button.closest('.account-item');
+                const accountId = parseInt(accountItem.dataset.id);
+                const accountData = accounts.find(acc => acc.id === accountId);
+
+                if (accountData) {
+                    let allInfo = '';
+                    if (accountData.biller === 'Accounts') {
+                        allInfo = `Biller: ${accountData.biller}\n` +
+                                  `Account Name: ${accountData.accountName}\n` +
+                                  `Username: ${accountData.username}\n` +
+                                  `Password: ${accountData.password}`; // Include actual password for copy all
+                    } else if (accountData.biller === 'BDO') {
+                        allInfo = `Biller: ${accountData.biller}\n` +
+                                  `Account: ${accountData.account}\n` +
+                                  `Account Holder: ${accountData.accountHolder}\n` +
+                                  `Account Number: ${accountData.accountNumber}\n` +
+                                  `Amount: ₱ ${parseFloat(accountData.amountToSettle).toFixed(2)}`;
+                    } else if (accountData.biller === 'CREDIT CARD') {
+                         allInfo = `Biller: ${accountData.biller}\n` +
+                                   `Bank: ${accountData.creditCardBank}\n` +
+                                   `Credit Card Number: ${accountData.creditCardNumber}\n` +
+                                   `Account Holder: ${accountData.accountHolder}\n` +
+                                   `Amount: ₱ ${parseFloat(accountData.amountToSettle).toFixed(2)}\n` +
+                                   `Billing Statement Date: ${accountData.billingStatementDate || 'N/A'}\n` +
+                                   `Contact Number: ${accountData.contactNumber || 'N/A'}\n` +
+                                   `Email Address: ${accountData.emailAddress || 'N/A'}\n` +
+                                   `Remarks: ${accountData.remarks || 'N/A'}`;
+                    } else {
+                        allInfo = `Biller: ${accountData.biller}\n` +
+                                  `Account Holder: ${accountData.accountHolder}\n` +
+                                  `Account/Ref. Number: ${accountData.accountNumber}\n` +
+                                  `Contact Number: ${accountData.telephoneNumber || 'N/A'}\n` +
+                                  `Email Address: ${accountData.emailAddress || 'N/A'}\n` +
+                                  `Amount: ₱ ${parseFloat(accountData.amountToSettle).toFixed(2)}\n` +
+                                  `Remarks: ${accountData.remarks || 'N/A'}`;
+                    }
+                    copyToClipboard(allInfo, button); // Uses the existing function for button feedback
+                }
+                return;
+            }
+
+            // Handle Delete Buttons
+            if (target.classList.contains('delete-btn')) {
+                const button = target;
+                const accountIdToDelete = parseInt(button.dataset.id);
+                if (confirm('Are you sure you want to delete this account?')) {
+                    accounts = accounts.filter(acc => acc.id !== accountIdToDelete);
+                    saveAccounts();
+                    applyFiltersAndSort();
+                    showToast('Account deleted successfully!');
+                }
+                return;
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadAccounts();
+            if (billerSelect.value === "") {
+                hideAllFieldGroups();
+            } else {
+                billerSelect.dispatchEvent(new Event('change'));
+            }
+        });
+    </script>
+</body>
+</html>
